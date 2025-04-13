@@ -1,0 +1,14 @@
+title: Colin Hardy
+description: >-
+  Adventures in cybersecurity, ethical hacking, and digital mischief. Home of clever tools, 
+  insightful stories, and occasional sarcasm from the frontlines of tech.
+
+baseurl: "" 
+url: "https://colin.bot"
+twitter_username: cybercdh
+github_username:  cybercdh
+
+theme: minima
+plugins:
+  - jekyll-feed
+
