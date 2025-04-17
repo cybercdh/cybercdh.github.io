@@ -1,0 +1,111 @@
+---
+layout: post
+title:  "It’s Always North Korea (Until It’s Not)"
+date:   2025-04-13 21:33:39 +0100
+categories: malware dprk ellis
+---
+*Featuring zero-day drama, digital wipeouts, and Ellis Clickworthy trying to keep a straight face while reading yet another attribution deck.*
+
+Meet Ellis Clickworthy, malware analyst extraordinaire and reluctant participant in the great game of nation-state bingo. He spends his days in reverse engineering hell and his nights avoiding phone calls from Threat Intel™ asking if a random hex string in a C2 beacon is “maybe Korean?”
+
+This story begins, like many bad ideas, with a suspicious DLL and a senior exec who once read a Wired article on Lazarus Group. There had been a compromise. An NGO, some unusual PowerShell activity, and an implant with just enough mystery to trigger the most dangerous phrase in cyber analysis:
+
+> "Could this be North Korea?"
+
+Ellis sighed. It was going to be one of those weeks.
+
+---
+
+## 💥 Blame It on the Wiper
+
+The malware in question had a destructive streak. Secure deletion routines, overwrite loops, zero-filling — a digital bonfire. This wasn’t just about access, it was about erasure.
+
+The binaries in question — `evtdiag.exe`, `evtsys.exe`, and `nroff_b.exe` — were part of a malware kit used in the Bangladesh Bank heist. Each had a role, but `evtsys.exe` stood out for its apparent specialty: nuking files from orbit.
+
+Ellis stepped through the code and saw:
+
+- A function to overwrite files with random data
+- A rename operation to obfuscate the original filename
+- A delayed `.bat` file dropped to clean up the binary (left behind, naturally)
+
+![Secure wipe logic diagram](INSERT_IMAGE_HERE)
+
+Sloppy. Effective. Very on-brand.
+
+---
+
+## 🧪 An RC4 Reunion
+
+Ellis dove deeper. Encryption? RC4. No IVs. Hardcoded keys. In fact, all three binaries used the exact same RC4 key:
+
+`4E381FA77F08CCAA0D56EDEFF9ED08EF`
+
+Even `evtsys.exe`, which didn’t even use it. Classic case of code reuse. Or lazy copy-pasting. Or both.
+
+A perfect storm of insecure practices and reusable logic. And when `gpca.dat` — the encrypted config file — was decoded, the malware checked for magic bytes:
+
+`A0 B0 C0 D0`
+
+Another unique fingerprint that tied these together.
+
+![RC4 key + magic byte check](INSERT_IMAGE_HERE)
+
+---
+
+## 🧬 Rich Headers, Poor Logic
+
+Rich headers — the overlooked fingerprint of Visual Studio builds — revealed more commonality. `evtdiag.exe`, `evtsys.exe`, and `nroff_b.exe` all shared similar Rich headers.
+
+Then Ellis checked `msoutc.exe`, a sample from the Sony Pictures attack. Same logic. Same wipe code. **Same Rich header.**
+
+> "Correlation isn’t causation. But it’s getting harder to pretend it’s all coincidence."
+
+He dumped the header and cross-compared. Same product IDs. Same build environment. Same... everything. Either this was reused dev infra, or someone went to a lot of effort to *look* like they used reused dev infra.
+
+---
+
+## 🧱 The Infrastructure Isn’t Helping
+
+The C2 domains? Brand new. Hosting? Generic VPS. TLS certs? Non-existent. One domain even misspelled its own name. (Ellis kept a running spreadsheet titled “Things That Make You Look Like APT On Accident.”)
+
+He missed the days when threat actors had the courtesy to reuse C2s for years. Now it was burner infrastructure and Cloudflare proxies. Sigh.
+
+---
+
+## 🪄 Attribution Theatre: Olympic Edition
+
+Ellis couldn’t ignore the OlympicDestroyer flashbacks. That malware used similar wipe logic. Similar string patterns. Even the **same Rich header** as the Bangladesh attack malware.
+
+But the rest didn’t match.
+
+- Visual Studio 6 metadata where there shouldn’t be any
+- Mismatched compilation dates
+- Disjointed C2s and OPSEC fails
+
+Deliberate deception? Almost certainly. Misleading analysts into chasing Lazarus shadows? Absolutely.
+
+> "You can fake code. You can fake headers. But you can’t fake tradecraft."
+
+---
+
+## 🧠 Final Analysis
+
+The malware was real. The wipe logic was functional. The attribution? Wobbly.
+
+Ellis pieced together the evidence:
+
+- Shared RC4 keys and magic byte logic
+- Common wipe routines tied to Lazarus-linked samples
+- Rich headers identical to known Lazarus binaries
+- Code reuse spotted via Intezer with over 90% code-genetic overlap
+
+And yet, the infrastructure and timing didn’t quite match. It could’ve been Lazarus. Or someone impersonating them. Or just a malware author who ran `evtdiag.exe` through pestudio and thought “neat.”
+
+> “You don’t need to be North Korea to cause a mess,” Ellis said. “But it sure helps if people think you are.”
+
+---
+
+*Ellis Clickworthy would like to remind you: the real APT is the attribution we made along the way.*
+
+
+

@@ -1,0 +1,64 @@
+---
+layout: post
+title:  "Pypi and Prejudice: A Dependency Confusion Love Story"
+date:   2025-04-17 22:06:00 +0100
+categories: dependency confusion nate
+permalink: /pyspi/
+---
+*Featuring typos, package takeovers, and a man who really should be watching Bluey with his kids instead of registering fake Python packages.*
+
+It was a quiet Tuesday evening – the kind where the kids are finally asleep, the dishwasher is humming softly, and the TV is politely suggesting that I might want to spend some quality time with my spouse.
+
+Naturally, I ignored all of that and started poking around GitHub.
+
+Somewhere in the glow of the laptop screen, deep in the forests of starred repositories and half-abandoned forks, I found it: a popular open-source project. Legit, modern, with the sort of README that includes badges for test coverage and a sponsor button. I admired it for a moment. Then I opened its `requirements.txt` and spotted something strange.
+
+There it was, nestled innocently among the legitimate packages: `py-sqllite3`. A humble typo. One extra 'l', one moment of keyboard misfire, one missed spellcheck. There was no such package on PyPI. Yet.
+
+This is the point where a normal, healthy adult might report the issue and close their laptop. But I am not that adult. I am the adult who builds tools at night to validate package names while my kids shout, "Dad, are you coming back to finish our Lego?"
+
+### 🎭 The Accidental Villain
+
+Let me introduce you to a developer I’ve named **Nate Pipley**. Nate works at a tech startup you've probably heard of. His team uses microservices. His coffee is strong. His linter is strict. But even Nate isn’t immune to a fat-fingered moment in a `requirements.txt` file.
+
+When Nate typed `py-sqllite3`, he didn’t know he was opening a door. Not just for dependency confusion, but for someone like me to walk in, carefully, quietly, wearing metaphorical gloves and an actual grin.
+
+### 🔎 Enter: `pyspi`
+
+See, I wrote a tool called [pyspi][gh-pyspi] — because sometimes you just want to give a list of Python packages to something and have it tell you which ones don’t exist on PyPI. No YAML. No extra dependencies. No overly enthusiastic log output.
+
+You feed `pyspi` a list of package names. Like:
+
+```bash
+cat requirements.txt | awk -F'==' '{print $1}' | pyspi
+```
+
+And pyspi checks each one using PyPI’s API, politely asking, “Excuse me, do you exist?” If PyPI shrugs and says, “Never heard of it,” then you’ve found a ghost dependency.
+
+So I ran it on Nate’s project. And sure enough:
+
+```bash
+py-sqllite3: not found
+```
+
+That was all I needed.
+
+### 🤯 The Confusion Bit
+For those unfamiliar with dependency confusion, it's a delightful little vulnerability where your build system installs a public package instead of a private one because it got... confused. If someone registers a package on PyPI that your internal tooling expects to find in a private repo — and the public one gets there first — your build may pull code you didn't intend to.
+
+In this case, Nate’s mistake wasn’t a private package gone rogue. It was just a typo. But the effect is similar: `pip install` sees a package name, shrugs, and says, “Sure, I’ll install it — from wherever I find it first.”
+
+So I claimed it. I registered `py-sqllite3` on PyPI. Gave it a harmless little `setup.py` that printed a message and did nothing sinister. Then I waited.
+
+A few hours later, my log lit up. Someone had installed it. Probably Nate. Maybe his CI/CD pipeline. Possibly a junior developer who'd been told to "just pip install everything."
+
+### 🧹 A Happy Ending (Sort Of)
+I unpublished the package. Sent a polite message to the project maintainer. Got a thank-you and a “wow, good catch.” My job was done. And still, my kids were waiting to show me how they’d built a cardboard spaceship that now doubled as a fort.
+
+This is how [pyspi][gh-pyspi] was born. Not out of boredom or malice, but out of curiosity — the same kind of curiosity that causes raccoons to open bins and security researchers to reverse-engineer setup.py files.
+
+Some nights I ship code. Other nights I spot package typos. And on rare occasions, I build something useful while ignoring all the people who would prefer I wasn’t still sitting at my terminal at 10:46pm.
+
+The moral of the story? Check your dependencies. Especially the ones with hyphens. And if you're Nate Pipley, maybe slow down when you're typing package names. Your CI server — and my free time — will thank you.
+
+[gh-pyspi]:https://github.com/cybercdh/pyspi.git
