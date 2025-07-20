@@ -1,0 +1,342 @@
+---
+layout: post
+title: "How I Automated My Way to £25k by Teaching DNS Servers to Refuse Me (And Why You Should Too)"
+date: 2025-07-20 14:30:00 +0100
+categories: bug-bounty dns automation
+permalink: /tracr/
+---
+
+*Featuring: terrible manual processes, a tool called tracr, and a man who really should have been doing laundry instead of registering abandoned nameservers.*
+
+It was 2:47 AM on a Wednesday when I had my eureka moment. Not the good kind where you solve world peace, but the kind where you realize you've been doing something incredibly tedious for months when you could have automated it in an afternoon.
+
+I was hunched over my laptop, manually running `dig +trace` commands like some sort of DNS archaeologist, when my coffee mug - which I'd named Gerald because I have issues - seemed to mock me with its emptiness.
+
+"There has to be a better way," I muttered to Gerald.
+
+Gerald, being a mug, offered no response. But the universe did. Sort of.
+
+## 🎭 Meet Derek Traceman: The Manual Digger
+
+Let me tell you about a bug bounty hunter I've named **Derek Traceman**. Derek is the kind of person who reads RFC documents for fun and has strong opinions about DNS TTL values. His methodology is solid, his documentation is meticulous, and his approach to finding dangling nameservers is... well, it's about as efficient as knitting a sweater with chopsticks.
+
+Derek's process went like this:
+
+1. **Subdomain enumeration** - Use assetfinder, subfinder, amass, or whatever shiny tool is trending
+2. **Manual DNS tracing** - Copy each subdomain into a terminal and run `dig subdomain.example.com +trace`
+3. **Nameserver extraction** - Squint at the output and manually identify the authoritative nameservers
+4. **Vulnerability testing** - Run `dig @nameserver domain.com` and pray for a `REFUSED` response
+5. **Repeat** - Do this for hundreds of subdomains while slowly losing the will to live
+
+Derek found vulnerabilities this way. Good ones. Juicy ones that paid out £3k, £5k, sometimes £8k per finding. But Derek was also slowly descending into madness, one manual dig command at a time.
+
+## 🔍 The Eureka Moment (Or: How I Learned to Stop Worrying and Love Automation)
+
+My breakthrough came during a particularly tedious engagement. I was testing a target with 2,847 subdomains (yes, I counted), and somewhere around subdomain 247, I had what psychiatrists might call "a moment of clarity" and what my wife calls "another one of your obsessive episodes."
+
+The pattern was always the same:
+- Run `dig +trace`
+- Parse the second-to-last response for NS records  
+- Extract the nameservers
+- Test each one for `REFUSED` or `SERVFAIL` responses
+- Celebrate or cry accordingly
+
+"This," I said to Gerald, "is exactly the sort of repetitive nonsense that computers were invented for."
+
+Gerald remained noncommittal, but I was already opening my IDE.
+
+## 🛠️ Building tracr: A Love Letter to Lazy Efficiency
+
+I named my tool **tracr** because:
+1. It traces DNS like `dig +trace`
+2. I have a thing for dropping vowels from tool names (see also: my other tools like `kitphishr` and `nsfckup`)
+3. It sounds vaguely like "tracer" but with more attitude
+
+The core concept was simple: feed it a list of subdomains, let it do all the tedious DNS archaeology, and output only the potentially vulnerable domains. Think of it as `dig +trace` but with a work ethic and no need for coffee breaks.
+
+### The Magic Formula
+
+Here's what tracr does under the hood:
+
+1. **Concurrent DNS tracing** - Takes your subdomain list and performs parallel `dig +trace` operations
+2. **Smart nameserver extraction** - Parses the trace results and identifies authoritative nameservers
+3. **Vulnerability detection** - Tests each nameserver for `REFUSED`/`SERVFAIL` responses
+4. **Clean output** - Gives you just the vulnerable domains, perfect for piping to other tools
+
+```bash
+# The old Derek way (soul-crushing)
+dig subdomain1.example.com +trace
+# manually parse output
+dig @ns1.example.com example.com
+# check for REFUSED
+# repeat 2,846 more times
+
+# The new tracr way (soul-preserving)
+cat subdomains.txt | tracr -c 50
+vulnerable1.example.com
+vulnerable2.example.com
+vulnerable3.example.com
+```
+
+### Real-World Magic
+
+The first time I ran tracr on a real target, something beautiful happened. What would have taken Derek 6 hours of manual digging completed in 2 minutes. The output was clean, the vulnerable domains were clearly identified, and I still had enough sanity left to explain to my family why I was cackling at my laptop.
+
+```bash
+subfinder -d target.com -silent | tracr -c 50 -v
+[TRACE] dig api.target.com +trace
+[NS] api.target.com -> ns1.abandoned-hosting.com
+[CHECK] dig target.com @ns1.abandoned-hosting.com
+[VULN] target.com (nameserver: ns1.abandoned-hosting.com)
+```
+
+That first vulnerable domain? £3,200. The second one I found 20 minutes later? £5,800. By the end of the week, I'd identified 7 dangling nameservers across 3 different bug bounty programs.
+
+## 💰 The Payoff: When Automation Meets Reward
+
+Over the next six months, tracr became my secret weapon. While other hunters were still manually tracing DNS records like digital archaeologists, I was processing thousands of subdomains in minutes.
+
+The results spoke for themselves:
+
+- **Q1 2024**: £8,400 in nameserver takeover bounties
+- **Q2 2024**: £12,200 (including one beautiful £4k finding that took 30 seconds to identify)
+- **Q3 2024**: £4,800 (the market was getting competitive)
+
+Total haul: **£25,400** in bounties, all from vulnerabilities that tracr helped me find in a fraction of the time Derek would have needed.
+
+But here's the kicker: I wasn't just finding more vulnerabilities - I was finding them faster, with less effort, and with enough time left over to actually enjoy the process.
+
+## 🎯 The Methodology: From Manual to Magical
+
+### The Old Way (Derek's Nightmare)
+```bash
+# For each subdomain (manually):
+dig subdomain.example.com +trace
+# Manually parse output for nameservers
+dig @nameserver1 domain.com
+dig @nameserver2 domain.com
+# Check each response for REFUSED/SERVFAIL
+# Repeat until insanity sets in
+```
+
+### The New Way (tracr's Dream)
+```bash
+# Discover subdomains, apply tracr's logic and of course, record your output
+assetfinder -subs-only target.com | tracr -c 50 | tee -a vulnerable.txt
+```
+
+## 🔧 Under the Hood: How tracr Actually Works
+
+For the technically curious (and the skeptics who think I'm making this up), here's how tracr performs its magic:
+
+### 1. Concurrent DNS Tracing
+```go
+// Simplified version of the core logic
+func TraceIt(domain string) {
+    responses, err := dig.Trace(domain)
+    if err != nil {
+        return
+    }
+    
+    // Focus on second-to-last response for authoritative NS
+    for i, response := range responses {
+        if i != len(responses)-2 {
+            continue
+        }
+        
+        // Extract nameservers from authority section
+        for _, nsRecord := range response.Msg.Ns {
+            if recordType == "NS" {
+                nameServers = append(nameServers, nameServer)
+            }
+        }
+    }
+}
+```
+
+### 2. Vulnerability Detection
+```go
+func CheckForRefusal(target *Target) (bool, error) {
+    for _, nameServer := range target.servers {
+        dig.SetDNS(nameServer)
+        message, err := dig.GetMsg(dns.TypeA, target.domain)
+        
+        responseCode := dns.RcodeToString[message.MsgHdr.Rcode]
+        if responseCode == "REFUSED" || responseCode == "SERVFAIL" {
+            return true, nil
+        }
+    }
+    return false, nil
+}
+```
+
+### 3. Smart Concurrency
+tracr uses configurable worker pools to balance speed with reliability. Too many concurrent requests and you'll get rate-limited. Too few and you'll be waiting forever. The sweet spot is usually around 20-50 concurrent workers.
+
+## 🎪 Real-World Success Stories
+
+### Case Study 1: The Forgotten Acquisition
+A major tech company had acquired a startup 18 months prior. The acquisition included dozens of subdomains, but the DNS migration was... incomplete. tracr identified 12 subdomains still pointing to the startup's old nameservers - nameservers that no longer existed.
+
+**Result**: £4,200 bounty for a vulnerability that took 45 seconds to find.
+
+### Case Study 2: The Rebranding Disaster  
+A financial services company had rebranded, changing their domain from `oldcompany.com` to `newcompany.com`. They'd migrated the main site but forgotten about 47 subdomains still configured with the old hosting provider's nameservers.
+
+**Result**: £5,800 bounty (their highest payout category) for what amounted to automated reconnaissance.
+
+### Case Study 3: The Development Environment Incident
+A SaaS company had hundreds of development and staging subdomains. When they switched hosting providers, someone forgot to update the DNS for the non-production environments. tracr found 3 vulnerable subdomains in under 2 minutes.
+
+**Result**: £3,600 bounty and a very grateful security team.
+
+## 🤔 Why Dangling Nameservers Are a Goldmine
+
+For those new to this attack vector, here's why dangling nameservers are such a lucrative target:
+
+### The Vulnerability
+When a domain's nameservers are configured but those nameservers:
+- No longer exist
+- Don't authoritatively serve the domain
+- Return `REFUSED` or `SERVFAIL` responses
+
+An attacker can potentially:
+- Register the abandoned nameserver infrastructure
+- Configure it to serve their own DNS records
+- Take control of the subdomain
+
+### Why Companies Care
+Subdomain takeovers can lead to:
+- **Phishing attacks** using the legitimate domain
+- **Session hijacking** if cookies are scoped to parent domains  
+- **Reputation damage** from malicious content
+- **Compliance violations** in regulated industries
+
+### Why Bug Bounty Programs Pay Well
+These vulnerabilities are:
+- **High impact** (can affect user trust and security)
+- **Easy to exploit** (once identified)
+- **Often overlooked** (companies focus on app security, not DNS hygiene)
+- **Scalable** (one misconfiguration can affect dozens of subdomains)
+
+## 🚀 Going Open Source: Why I'm Sharing tracr
+
+After months of profitable hunting with tracr, I made a decision that my accountant probably disagrees with: I'm open-sourcing it.
+
+Why? A few reasons:
+
+1. **The market was getting competitive** - Other hunters were building similar tools
+2. **I believe in sharing knowledge** - The bug bounty community thrives on collective improvement
+3. **I wanted to focus on other attack vectors** - Time to move on to new challenges
+4. **I'd rather be known for contributions than hoarding** - Reputation > short-term profit
+
+Plus, there's something satisfying about knowing that Derek Traceman - and hunters like him - no longer have to manually trace DNS records until their eyes bleed.
+
+## 📈 The Numbers Game: ROI of Automation
+
+Let's do some napkin math on why building tracr was worth it:
+
+### Time Investment
+- **Initial development**: ~12 hours (2 evenings + 1 weekend morning)
+- **Testing and refinement**: ~8 hours
+- **Documentation**: ~2 hours
+- **Total**: ~22 hours
+
+### Return on Investment  
+- **Total bounties**: £25,400
+- **Time saved**: ~200 hours of manual DNS tracing
+- **Hourly rate**: £127/hour
+- **Sanity preserved**: Priceless
+
+Even if you only find one £3k vulnerability with tracr, you've already made back more than most people earn from a week of manual testing.
+
+## 🛡️ Responsible Disclosure and Ethics
+
+Before anyone gets ideas about using tracr for evil, let me be clear: this tool is designed for authorized security testing. The bounties I earned came from legitimate bug bounty programs (mostly private ones) where I had explicit permission to test.
+
+Dangling nameservers are a real security issue that companies need to know about. Tools like tracr help identify these vulnerabilities so they can be fixed, not exploited maliciously.
+
+If you use tracr:
+- **Only test domains you have permission to test**
+- **Follow responsible disclosure practices**
+- **Don't be Derek** (just kidding, Derek is probably a lovely person)
+
+## 🎯 Installation and Usage
+
+Getting started with tracr is simpler than Derek's manual process:
+
+### Installation
+```bash
+go install github.com/cybercdh/tracr@latest
+```
+
+### Basic Usage
+```bash
+# Single domain
+tracr subdomain.example.com
+
+# From file
+cat subdomains.txt | tracr
+
+# High-speed mode
+cat subdomains.txt | tracr -c 50 -v
+```
+
+### Integration Examples
+```bash
+# With subfinder
+subfinder -d example.com -silent | tracr
+
+# With amass
+amass enum -passive -d example.com | tracr -c 30
+
+# With assetfinder (my favourtie)
+assetfinder -subs-only example.com | tracr 
+```
+
+## 🔮 What's Next: Beyond tracr
+
+With tracr handling the DNS archaeology, I've moved on to other challenges, which I'll continue to blog about in due course. But tracr remains one of my favorite creations. Not because of the bounties it earned, but because it solved a real problem in an elegant way. It took something tedious and made it trivial. It took something manual and made it magical.
+
+## 💭 Final Thoughts: The Automation Advantage
+
+Derek Traceman is still out there somewhere, manually running `dig +trace` commands and wondering why his bounty submissions always seem to come in second. Meanwhile, hunters using tracr are processing thousands of domains in minutes, finding vulnerabilities faster, and actually enjoying the process.
+
+The lesson isn't just about DNS or nameservers or even bug bounties. It's about recognizing when you're doing something repetitive and asking yourself: "Could a computer do this better?"
+
+Usually, the answer is yes. And usually, teaching the computer to do it is more fun than doing it yourself.
+
+Just ask Gerald. He's been holding my coffee through this entire journey, never complaining, never judging, always there when I need him. Though I should probably wash him occasionally.
+
+---
+
+## 🛠️ Try tracr Yourself
+
+Ready to automate your way to better recon? Here's how to get started:
+
+### Installation
+```bash
+go install github.com/cybercdh/tracr@latest
+```
+
+### Your First Hunt
+```bash
+# Find some subdomains
+assetfinder -subs-only example.com > subs.txt
+
+# Find the vulnerable ones
+cat subs.txt | tracr -c 20 -v
+```
+
+### Join the Community
+- **GitHub**: [github.com/cybercdh/tracr](https://github.com/cybercdh/tracr)
+- **Issues/PRs**: Always welcome
+- **Success stories**: Follow me on X [@cybercdh](https://x.com/cybercdh)
+
+### The Disclaimer
+Use responsibly. Test only what you're authorized to test. Follow responsible disclosure. Don't be evil. Be like tracr: efficient, helpful, and slightly obsessed with DNS.
+
+> "Automation isn't about replacing human intelligence. It's about amplifying human laziness into productivity."  
+> — Me, probably, after too much coffee
+
+*P.S. - No DNS servers were harmed in the making of this tool. Several manual processes, however, were brutally automated.*
