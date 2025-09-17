@@ -1,12 +1,12 @@
 ---
 layout: post
-title: "Recon Flyovers with webscout: Polite Metadata, Fast Decisions"
+title: "Marta and the Thousand Hosts: Recon Flyovers Without Wreckage"
 date: 2025-09-17 10:00:00 +0100
 categories: recon webscout http dns osint
 permalink: /webscout/
 ---
 
-*Featuring aerial reconnaissance, polite rate limits, and a favicon that tattles on entire CDNs.*
+*Featuring aerial reconnaissance, polite rate limits, and a favicon that tattles like a teenager with a group chat.*
 
 **TL;DR:** do fast, polite “flyovers” of many hosts, collect useful metadata (headers, favicon hash, SPF/DMARC, CDN hints), and make decisions without melting anything.
 
@@ -19,9 +19,9 @@ assetfinder -subs-only example.com \
 
 Use it: https://github.com/cybercdh/webscout
 
-Behold Becky Headers. Becky does recon like a conscientious magpie: in, out, shiny metadata only. No brute forcing, no ten-minute waterfalls, no screenshots of login pages at 3am. Becky flies over, takes good notes, and goes home before her coffee gets tepid. This is the spirit of `webscout`.
+Meet Marta Metadata. Marta once spent a whole evening right‑clicking “View Source” across 1,000 subdomains and woke up a slightly worse person. She promised herself she would never again play “guess the tech stack” by smell. She would float above the landscape like a considerate helicopter pilot, take notes politely, and land before the coffee went from “alive” to “artifact.” This is the spirit of webscout: in, out, signal only.
 
-Think of it like a helicopter tour. We don’t rummage through anyone’s sofa cushions; we look from the air and jot down what’s obvious: who hosts this, what banners are they flying, which email policies look like a post-it note in the wind, and whether their favicon screams “Hi, I’m a managed CDN.”
+On Wednesday, Marta’s brief was simple in the way that maps of spaghetti are simple: “Here are all our subdomains. Which ones are problems?” She needed the fast 80%—headers, favicon hash, mail policy, obvious CDN hints—without melting anything or accidentally role‑playing a DDoS.
 
 Copy me:
 
@@ -33,9 +33,9 @@ assetfinder -subs-only example.com \
  | tee summary.tsv
 ```
 
-Here’s the kind of signal Becky cares about and how to get it.
+Here’s the kind of signal Marta cares about and how she pulls it without waking the neighbors.
 
-Favicon fingerprints (aka “that tiny image that outs your tech stack”):
+Favicon fingerprints (aka “that tiny image that outs your CDN/stack”):
 
 ```go
 // go: generate mmh3 hash of a favicon the way many scanners do
@@ -61,7 +61,7 @@ func main() {
 }
 ```
 
-Email policy sanity (DMARC/SPF), because phishing ruins everyone’s day:
+Email policy sanity (DMARC/SPF), because phishing ruins everyone’s day and your CISO’s calendar:
 
 ```bash
 # Quick look: DMARC published and posture
@@ -93,14 +93,14 @@ dom=example.com
 dig +short TXT _dmarc.$dom | tr -d '"' | python3 dmarc_check.py
 ```
 
-A few “webscouty” heuristics worth their weight in prizes and pizza:
+Marta’s heuristics (worth their weight in pizza):
 
 - Security headers: if CSP is missing (or just “default-src *”), note it; if HSTS is absent on apex HTTPS, note it louder.
 - CDN hints: consistent CNAMEs to known edges, `server` headers like “cloudflare,” and telltale favicon hashes; triangulate, don’t assume.
 - Disclosure: X-Powered-By banners and verbose error pages are the cargo shorts of the web—comfortable, revealing, easily fixed.
 - Mail posture: DMARC p=reject/quarantine is civilized; p=none is a cry for help. SPF with a 14‑layer include-latte is a change control story waiting to happen.
 
-Rate-limiting manners so you get invited back:
+Manners so you get invited back:
 
 - Concurrency around 20–50 is the sweet spot for most programs; dial down on fragile infra.
 - Timeouts, backoff, and a per‑host cap (“one look, move on”) keep you fast and friendly.
@@ -115,7 +115,12 @@ cat subs.txt \
  | jq -r '.[] | [.host, .http.status, (.headers.csp // ""), (.headers.strict_transport_security // "")] | @tsv'
 ```
 
-And because we all love a neat handoff, here’s a report template your future self will actually reuse.
+What did Marta actually find? Three buckets of joy:
+- A cluster of hosts missing HSTS entirely on HTTPS apex (quick win)
+- A “default-src *” CSP that might as well be a wink
+- A DMARC p=none on the apex that explained last week’s spoofing rumor
+
+She didn’t need screenshots or heroics. Just flyovers and notes. And because we all love a neat handoff, here’s a report template your future self will actually reuse.
 
 Report snippet (defender/eng-friendly):
 
@@ -139,4 +144,3 @@ Notes: Metadata-only collection; no authenticated paths or brute forcing perform
 ```
 
 `webscout` is about momentum. Collect the 80% that lets you decide “go deeper” vs “move on,” and do it with the bedside manner of a considerate house guest. Get your signals, write your notes, and land the helicopter before anyone notices the rotor wash.
-

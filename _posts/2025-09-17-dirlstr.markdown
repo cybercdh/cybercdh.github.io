@@ -1,12 +1,12 @@
 ---
 layout: post
-title: "Open Directory Recon with dirlstr: Be the Web’s Polite Janitor"
+title: "Dina and the Open Door: Directory Listings Without Drama"
 date: 2025-09-17 10:55:00 +0100
 categories: recon http buckets directories ioc
 permalink: /dirlstr/
 ---
 
-*Featuring unlocked cupboards, politely averted eyes, and the art of collecting IOCs without touching the jewelry drawer.*
+*Featuring unlocked cupboards, politely averted eyes, and the art of collecting IOCs without touching the jewelry drawer (or the snacks).*
 
 **TL;DR:** scan URLs for open directory listings and exposed bucket indexes; collect filenames and IOCs without accessing sensitive contents.
 
@@ -16,7 +16,9 @@ cat urls.txt | dirlstr -c 40 | tee open-dirs.txt
 
 Use it: https://github.com/cybercdh/dirlstr
 
-Meet Dina Directory. Dina doesn’t break in; she just notices which doors are already open and leaves a helpful note. `dirlstr` finds classic “Index of /” directory pages and cloud bucket listings (S3/GCS/Azure) from a list of URLs, so you can generate actionable IOCs without rummaging.
+Meet Dina Directory. Dina is the colleague who leaves kitchens better than she found them and labels her lunch. She doesn’t break in; she notices which doors are open and leaves a helpful note. This week’s note read: “Your staging server is listing everything in /uploads. Also, your database backups are named backup-final-v3-FINAL.zip. Please sit down.”
+
+dirlstr is Dina’s flashlight. It finds “Index of /” directory pages and cloud bucket listings from a list of URLs and lets you collect filenames and IOCs without rummaging in the drawers. It’s recon with manners and a clipboard.
 
 Copy me:
 
@@ -30,7 +32,7 @@ cat urls.txt \
 rg -NI "(\.zip|\.tar|\.gz|/admin/|/panel/|creds\.|passwords?\.|backup|db\.sql)" open-dirs.txt | tee iocs.txt
 ```
 
-If you don’t have URLs yet, cheap ways to get candidates:
+If you don’t have URLs yet, two polite ways to get candidates:
 
 ```bash
 # 1) Enumerate subdomains and probe for HTTP
@@ -47,20 +49,20 @@ done < <(cut -d' ' -f1 urls.txt) | tee url-paths.txt
 cat url-paths.txt | dirlstr -c 40 | tee open-dirs.txt
 ```
 
-What `dirlstr` flags in the wild:
+What dirlstr flags in the wild (Dina’s greatest hits):
 
 - Classic directory indexes (Apache/nginx/IIS “Index of /” with file listings)
 - S3-style XML listings (ListBucketResult) and cloud storage index pages
 - Obvious listing footprints without fetching large files (filenames only)
 
-Curl a single path safely (listing only):
+Curl a single path safely (listing only, the “peep through the doorway” approach):
 
 ```bash
 url=https://example.com/uploads/
 curl -fsSL --max-time 5 "$url" | head -n 80 | rg -n "Index of|<Key>|<Title>Directory listing"
 ```
 
-Redaction-first triage: build useful signals without opening sensitive files:
+Redaction-first triage: build useful signals without opening sensitive files (your SOC will thank you):
 
 ```bash
 # Parse filenames from HTML/XML listings only; skip downloads
@@ -74,6 +76,8 @@ Safety and etiquette (keeps programs happy and you invited back):
 - Don’t fetch large objects or archives; list filenames and hashes when possible.
 - Respect robots.txt for crawlers; even when not binding, it’s a vibe check.
 - Concurrency 20–50; back off on 429/503; per‑host cap.
+
+Dina’s disclosure email got a grateful “we had no idea” reply and a new policy: directory listing disabled by default, backups out of webroot, and a cron job that doesn’t cry. Here’s the skeleton she used:
 
 Report snippet (platform/hosting/abuse):
 
@@ -90,4 +94,3 @@ Recommended fix: Disable directory listing; restrict access; remove sensitive fi
 ```
 
 Being the web’s polite janitor is simple: notice the open door, log what’s plainly visible, and leave a neat note so someone can close it. No rummaging, no drama, maximum usefulness.
-

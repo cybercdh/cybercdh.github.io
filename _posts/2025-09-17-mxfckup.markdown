@@ -1,12 +1,12 @@
 ---
 layout: post
-title: "MXFckup: How Email Falls Over in Three Easy TXT Records"
+title: "Max in the Mailroom: Fixing Email with Three TXT Records and a Prayer"
 date: 2025-09-17 10:20:00 +0100
 categories: email dns mx spf dmarc bimi recon
 permalink: /mxfckup/
 ---
 
-*Featuring misdirected parcels, TXT spaghetti, and a BIMI logo that looks like it was faxed in 2009.*
+*Featuring misdirected parcels, TXT spaghetti, and a BIMI logo that looks like it was faxed in 2009 by a pigeon.*
 
 **TL;DR:** quickly audit MX reachability and policy posture (MX/A/AAAA/PTR, SPF depth, DMARC policy, BIMI presence). Catch breakages that lead to spoofing and dropped mail.
 
@@ -18,7 +18,9 @@ cat domains.txt \
 
 Use it: https://github.com/cybercdh/mxfckup
 
-Meet Max. Max forwards mail like a champion… until you move the post office and forget to tell the lorries. Email is just the postal service with worse uniforms; MX records are sorting centers, SPF/DMARC are the rules about who’s allowed to drop parcels at the back door, and BIMI is the big friendly logo on the building. `mxfckup` does a flyover and tells you which bits are on fire.
+Meet Max Mailroom. Max is the kind of person who apologizes to printers and labels tape dispensers “you got this.” He also believes email is the postal service with worse uniforms: MX records are sorting centers; SPF/DMARC are the rules about who’s allowed at the back door; BIMI is the big friendly logo that says “no really, it’s us.” This week, the parcels were going missing and the CEO had opinions.
+
+Max pointed mxfckup at a list of domains and made tea while it tutted. The results were poetic: an MX that didn’t resolve (“we moved, forgot the forwarding”), an SPF include chain that looked like a family tree (“everyone’s invited”), and a DMARC p=none (“please critique our spam”).
 
 Copy me:
 
@@ -31,7 +33,7 @@ cat domains.txt \
 cat domains.txt | bimiprobe -c 40 | tee bimi.txt
 ```
 
-If you’re doing it by hand because you love pain (relatable):
+If you’re doing it by hand because you love pain (relatable) and want to understand the failure modes:
 
 ```bash
 # MX targets should be hostnames that resolve to A/AAAA (no CNAMEs)
@@ -54,7 +56,7 @@ dig +short TXT "$dom" | tr -d '"' | rg -i '^v=spf1' || echo 'no SPF'
 dig +short TXT _dmarc."$dom" | tr -d '"' || echo 'no DMARC'
 ```
 
-SPF include chains are where good intentions go to nap. Here’s a tiny helper to count depth:
+SPF include chains are where good intentions go to nap and never wake up. Here’s a tiny helper to count depth:
 
 ```python
 # spf_depth.py
@@ -71,14 +73,14 @@ spf=$(dig +short TXT example.com | tr -d '"' | rg -i '^v=spf1' -m1)
 echo "$spf" | python3 spf_depth.py
 ```
 
-STARTTLS sanity (don’t be loud; one probe is enough):
+STARTTLS sanity (don’t be loud; one probe is enough; you are a guest):
 
 ```bash
 mx=$(dig +short MX example.com | sort -n | awk '{print $2; exit}' | sed 's/\.$//')
 echo | openssl s_client -quiet -starttls smtp -connect "$mx:25" -servername "$mx" 2>/dev/null | head -n 1
 ```
 
-What `mxfckup` flags in plain English:
+What mxfckup flags, translated into normal person:
 
 - MX target doesn’t resolve to A/AAAA, or uses a CNAME (don’t).
 - MX IP PTR missing or mismatched (hurts deliverability).
@@ -107,5 +109,4 @@ Recommended:
 Notes: Metadata-only checks; no content or auth paths touched.
 ```
 
-Email is 80% etiquette and 20% DNS. Fix the TXT spaghetti, point the vans to real buildings, and maybe—just maybe—your BIMI logo will stop looking like it was drawn in MS Paint by a raccoon.
-
+Max’s ending was happy: one PTR added, one SPF diet (from seven includes to four), DMARC moved to quarantine with a calendar reminder, and a BIMI SVG that no longer looked like a witness protection photo. Email is 80% etiquette and 20% DNS. Fix the TXT spaghetti, point the vans to real buildings, and maybe—just maybe—your BIMI logo will stop looking like it was drawn in MS Paint by a raccoon.

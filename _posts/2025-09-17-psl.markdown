@@ -1,12 +1,12 @@
 ---
 layout: post
-title: "PSL-Fu: Using the Public Suffix List to Sniff Misconfigurations (and Easy Takeovers)"
+title: "Poppy Suffix and the Boundary Lines: PSL‑Powered Hunting for Dangling Things"
 date: 2025-09-17 11:10:00 +0100
 categories: recon dns psl takeovers cookies
 permalink: /psl/
 ---
 
-*Featuring suffix magic, cookie drama, and a marketing site that really wanted to retire in 2019.*
+*Featuring suffix magic, cookie drama, and a marketing site that really wanted to retire in 2019 but kept showing up like an uninvited plus-one.*
 
 **TL;DR:** use `psl` to pull provider-specific “public suffix” domains (e.g., `github.io`, `s3-website-*.amazonaws.com`, `herokuapp.com`), then scan your CNAMEs that point into those suffixes for dangling resources and cookie-scope surprises.
 
@@ -18,7 +18,7 @@ cat subs.txt | dnsx -cn | rg -f aws-psl.txt | tee cnames-into-aws.txt
 
 Use it: https://github.com/cybercdh/psl
 
-Meet Poppy Suffix. Poppy is a bug bounty hunter with strong feelings about tea and cookie scopes. One evening she remembered that browsers use the Public Suffix List (PSL) to decide cookie boundaries—because if you could set a cookie on `.com` then the internet would simply die. The PSL also quietly tells you which vendor domains are subdivided for users. Which means the label right under those “public suffixes” is controlled by someone else. Sometimes that someone is… no longer you.
+Meet Poppy Suffix. Poppy is what happens when a linguist and a network engineer accidentally share a brain. She cares deeply about boundary markers—both in sentences and in DNS. Browsers use the Public Suffix List (PSL) to decide “you may not set a cookie for .com because no.” The same list also—quietly, helpfully—marks vendor domains where the label under the line belongs to users. If your CNAME points into one of those and the user space is empty, well, congratulations: you’ve built a very fancy Welcome Mat.
 
 Poppy ran my `psl` tool, which fetches and filters the PSL. The PSL has entries like:
 
@@ -65,17 +65,17 @@ awk '/github\.io/{print $1"\t"$3}' interesting.txt | while read host target; do
 done | tee ghp-triage.txt
 ```
 
-You get the idea: PSL → provider suffixes → your CNAMEs into those suffixes → provider‑specific existence checks.
+You get the idea: PSL → provider suffixes → your CNAMEs into those suffixes → provider‑specific existence checks. Poppy’s teabag had barely unfurled and she already had a short list of “this used to exist” candidates.
 
-Our heroine Poppy found `events.example.com` → `events-2019.s3-website-eu-west-1.amazonaws.com`. The site had retired; the bucket did too. The PSL told her that `s3-website-eu-west-1.amazonaws.com` is a public suffix boundary—so the `events-2019` label is registrable by anyone. She confirmed with a gentle `curl` and that beautiful “NoSuchBucket”. Then she wrote a polite report, did not claim anything, and went to make tea.
+Our heroine Poppy found a different ghost than Becky’s: `blog-assets.example.com` → `example-project.github.io`. The GitHub repo was archived in 2021; the pages site was a polite 404 with the subtext “you could make this if you wanted.” The PSL said `github.io` is a public suffix, meaning the label before it—`example-project`—is user space, not vendor space. Poppy did not create anything. She did what polite hunters do: confirmed the pattern, wrote a crisp report, and let someone else push the buttons.
 
-Why PSL helps your mental model:
+Why PSL helps your mental model (and your tea schedule):
 
 - Cookie scope: You cannot set cookies on a public suffix. If you try to scope your session cookie to `github.io` “for convenience,” the browser will say “no” and you will invent new swear words. Good.
 - Ownership boundary: The label below a public suffix is someone’s space. If your subdomain points into that space (CNAME), ensure you still own the thing there.
 - Hunting strategy: Start from suffixes your org uses; PSL saves you guessing the list.
 
-Provider check sketches (be nice; don’t hammer):
+Provider check sketches (be nice; don’t hammer; make tea):
 
 ```bash
 # CloudFront: 403/404 are normal; "Bad domain" patterns are interesting
@@ -118,4 +118,3 @@ Recommended fix: Remove/replace the CNAME or recreate and control the backing re
 ```
 
 PSL is the world’s quiet boundary marker. Once you see the lines it draws, you’ll stop tripping over cookie scopes and start catching misconfigurations that were hiding in plain sight since 2019.
-
