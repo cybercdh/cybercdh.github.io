@@ -1,0 +1,121 @@
+---
+layout: post
+title: "PSL-Fu: Using the Public Suffix List to Sniff Misconfigurations (and Easy Takeovers)"
+date: 2025-09-17 11:10:00 +0100
+categories: recon dns psl takeovers cookies
+permalink: /psl/
+---
+
+*Featuring suffix magic, cookie drama, and a marketing site that really wanted to retire in 2019.*
+
+**TL;DR:** use `psl` to pull provider-specific “public suffix” domains (e.g., `github.io`, `s3-website-*.amazonaws.com`, `herokuapp.com`), then scan your CNAMEs that point into those suffixes for dangling resources and cookie-scope surprises.
+
+```bash
+# Pull Amazon-related PSL entries, then hunt CNAMEs ending in them
+psl -d amazonaws.com | tee aws-psl.txt
+cat subs.txt | dnsx -cn | rg -f aws-psl.txt | tee cnames-into-aws.txt
+```
+
+Use it: https://github.com/cybercdh/psl
+
+Meet Poppy Suffix. Poppy is a bug bounty hunter with strong feelings about tea and cookie scopes. One evening she remembered that browsers use the Public Suffix List (PSL) to decide cookie boundaries—because if you could set a cookie on `.com` then the internet would simply die. The PSL also quietly tells you which vendor domains are subdivided for users. Which means the label right under those “public suffixes” is controlled by someone else. Sometimes that someone is… no longer you.
+
+Poppy ran my `psl` tool, which fetches and filters the PSL. The PSL has entries like:
+
+```
+github.io
+herokuapp.com
+pages.dev
+vercel.app
+s3-website-us-east-1.amazonaws.com
+s3-website-eu-west-1.amazonaws.com
+cloudfront.net
+```
+
+Each of these is a boundary. If your subdomain CNAMEs to something inside one of these suffixes and the backing resource is gone, anyone who can claim that resource gets to answer for your subdomain.
+
+Copy me:
+
+```bash
+# 1) Enumerate subdomains
+assetfinder -subs-only example.com | tee subs.txt
+
+# 2) Get PSL slices for providers you actually use
+psl -d github.io > gh.txt
+psl -d amazonaws.com > aws.txt
+psl -d herokuapp.com > heroku.txt
+
+# 3) Find CNAME targets that point into those suffixes
+cat subs.txt | dnsx -cn | tee cnames.txt
+rg -f <(cat gh.txt aws.txt heroku.txt) cnames.txt | tee interesting.txt
+
+# 4) Check if the resource exists (provider-specific heuristics)
+# S3 website buckets (existence):
+awk '/s3-website-/{print $1"\t"$3}' interesting.txt | while read host target; do
+  b=$(echo "$target" | sed -E 's/\.(s3-website-[^.]+\.amazonaws\.com)$/,/\1/; s/\.s3-website-[^.]+\.amazonaws\.com$//')
+  # naive: try HTTP and look for NoSuchBucket
+  code=$(curl -sS -o - -w '%{http_code}' "http://$target" | rg -q "NoSuchBucket" && echo NSB || echo $code)
+  echo -e "$host\t$target\t$code"
+done | tee s3-triage.txt
+
+# GitHub Pages (gh.io) takeover sniff (404/Project not found is a known pattern):
+awk '/github\.io/{print $1"\t"$3}' interesting.txt | while read host target; do
+  code=$(curl -sS -o - -w '%{http_code}' "https://$target" | rg -q "There isn't a GitHub Pages site here|Create a repository" && echo MAYBE || echo $code)
+  echo -e "$host\t$target\t$code"
+done | tee ghp-triage.txt
+```
+
+You get the idea: PSL → provider suffixes → your CNAMEs into those suffixes → provider‑specific existence checks.
+
+Our heroine Poppy found `events.example.com` → `events-2019.s3-website-eu-west-1.amazonaws.com`. The site had retired; the bucket did too. The PSL told her that `s3-website-eu-west-1.amazonaws.com` is a public suffix boundary—so the `events-2019` label is registrable by anyone. She confirmed with a gentle `curl` and that beautiful “NoSuchBucket”. Then she wrote a polite report, did not claim anything, and went to make tea.
+
+Why PSL helps your mental model:
+
+- Cookie scope: You cannot set cookies on a public suffix. If you try to scope your session cookie to `github.io` “for convenience,” the browser will say “no” and you will invent new swear words. Good.
+- Ownership boundary: The label below a public suffix is someone’s space. If your subdomain points into that space (CNAME), ensure you still own the thing there.
+- Hunting strategy: Start from suffixes your org uses; PSL saves you guessing the list.
+
+Provider check sketches (be nice; don’t hammer):
+
+```bash
+# CloudFront: 403/404 are normal; "Bad domain" patterns are interesting
+awk '/cloudfront\.net/{print $1"\t"$3}' interesting.txt | while read host target; do
+  code=$(curl -sS -o - -w '%{http_code}' "https://$host" | rg -q "ERROR|Bad request" && echo MAYBE || echo $code)
+  echo -e "$host\t$target\t$code"
+done | tee cf-triage.txt
+```
+
+Bonus: a tiny Go snippet that uses the `publicsuffix` library to ask “is this a registrable eTLD+1, and what’s the boundary?” It pairs well with a `psl` prefetch cache.
+
+```go
+package main
+import (
+  "fmt"
+  "golang.org/x/net/publicsuffix"
+)
+func main(){
+  for _, h := range []string{"example.github.io","cdn.cloudfront.net","foo.s3-website-us-east-1.amazonaws.com"} {
+    etld1, _ := publicsuffix.EffectiveTLDPlusOne(h)
+    sfx, _ := publicsuffix.PublicSuffix(h)
+    fmt.Printf("host=%s etld+1=%s suffix=%s\n", h, etld1, sfx)
+  }
+}
+```
+
+Report snippet (bug bounty/responsible disclosure):
+
+```
+Title: CNAME to provider public-suffix with unclaimed/deleted resource (potential takeover)
+
+Affected: events.example.com
+Target: events-2019.s3-website-eu-west-1.amazonaws.com
+Evidence:
+  - PSL shows s3-website-eu-west-1.amazonaws.com is a public suffix boundary
+  - HTTP response indicates "NoSuchBucket" (resource no longer exists)
+Impact: An attacker could create the bucket "events-2019" and serve arbitrary content at events.example.com
+Actions taken: No resource creation or claim attempted; discovery only
+Recommended fix: Remove/replace the CNAME or recreate and control the backing resource; add monitoring for CNAMEs into public-suffix providers
+```
+
+PSL is the world’s quiet boundary marker. Once you see the lines it draws, you’ll stop tripping over cookie scopes and start catching misconfigurations that were hiding in plain sight since 2019.
+
