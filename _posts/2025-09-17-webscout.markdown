@@ -1,0 +1,142 @@
+---
+layout: post
+title: "Recon Flyovers with webscout: Polite Metadata, Fast Decisions"
+date: 2025-09-17 10:00:00 +0100
+categories: recon webscout http dns osint
+permalink: /webscout/
+---
+
+*Featuring aerial reconnaissance, polite rate limits, and a favicon that tattles on entire CDNs.*
+
+**TL;DR:** do fast, polite “flyovers” of many hosts, collect useful metadata (headers, favicon hash, SPF/DMARC, CDN hints), and make decisions without melting anything.
+
+```bash
+assetfinder -subs-only example.com \
+  | webscout -c 40 -json \
+  | jq . \
+  | tee flyover.json
+```
+
+Use it: https://github.com/cybercdh/webscout
+
+Behold Becky Headers. Becky does recon like a conscientious magpie: in, out, shiny metadata only. No brute forcing, no ten-minute waterfalls, no screenshots of login pages at 3am. Becky flies over, takes good notes, and goes home before her coffee gets tepid. This is the spirit of `webscout`.
+
+Think of it like a helicopter tour. We don’t rummage through anyone’s sofa cushions; we look from the air and jot down what’s obvious: who hosts this, what banners are they flying, which email policies look like a post-it note in the wind, and whether their favicon screams “Hi, I’m a managed CDN.”
+
+Copy me:
+
+```bash
+# Minimal: enumerate -> scout -> keep only interesting bits
+assetfinder -subs-only example.com \
+ | webscout -c 40 -json \
+ | jq -r '.[] | [.host, .http.status, (.headers.server // ""), (.headers.csp // ""), (.mail.dmarc // "")] | @tsv' \
+ | tee summary.tsv
+```
+
+Here’s the kind of signal Becky cares about and how to get it.
+
+Favicon fingerprints (aka “that tiny image that outs your tech stack”):
+
+```go
+// go: generate mmh3 hash of a favicon the way many scanners do
+package main
+
+import (
+    "encoding/base64"
+    "fmt"
+    "io"
+    "net/http"
+    mmh3 "github.com/spaolacci/murmur3"
+)
+
+func main() {
+    url := "https://example.com/favicon.ico"
+    resp, err := http.Get(url)
+    if err != nil { panic(err) }
+    defer resp.Body.Close()
+    b, _ := io.ReadAll(resp.Body)
+    s := base64.StdEncoding.EncodeToString(b)
+    h := mmh3.Sum32([]byte(s))
+    fmt.Println(h) // compare against known hashes (e.g., Shodan/Censys cheat-sheets)
+}
+```
+
+Email policy sanity (DMARC/SPF), because phishing ruins everyone’s day:
+
+```bash
+# Quick look: DMARC published and posture
+dom=example.com
+rec=$(dig +short TXT _dmarc.$dom | tr -d '"')
+echo "$rec" | sed 's/;/\n/g' | egrep '^(v=|p=|adkim=|aspf=)'
+
+# SPF include chain length (depth is where configs go to die)
+spf=$(dig +short TXT $dom | tr -d '"' | rg -i '^v=spf1')
+echo "$spf"
+echo "$spf" | rg -o 'include:[^ ]+' | wc -l
+```
+
+If you’d like a tiny alignment checker to drop into a pipeline:
+
+```python
+# dmarc_check.py
+import re, sys
+rec = sys.stdin.read()
+p = re.search(r'(^|;)p=([a-z]+)', rec)
+adkim = re.search(r'(^|;)adkim=([rs])', rec)
+aspf = re.search(r'(^|;)aspf=([rs])', rec)
+posture = (p.group(2) if p else 'none')
+print(f"policy={posture} adkim={(adkim.group(2) if adkim else 'r')} aspf={(aspf.group(2) if aspf else 'r')}")
+```
+
+```bash
+dom=example.com
+dig +short TXT _dmarc.$dom | tr -d '"' | python3 dmarc_check.py
+```
+
+A few “webscouty” heuristics worth their weight in prizes and pizza:
+
+- Security headers: if CSP is missing (or just “default-src *”), note it; if HSTS is absent on apex HTTPS, note it louder.
+- CDN hints: consistent CNAMEs to known edges, `server` headers like “cloudflare,” and telltale favicon hashes; triangulate, don’t assume.
+- Disclosure: X-Powered-By banners and verbose error pages are the cargo shorts of the web—comfortable, revealing, easily fixed.
+- Mail posture: DMARC p=reject/quarantine is civilized; p=none is a cry for help. SPF with a 14‑layer include-latte is a change control story waiting to happen.
+
+Rate-limiting manners so you get invited back:
+
+- Concurrency around 20–50 is the sweet spot for most programs; dial down on fragile infra.
+- Timeouts, backoff, and a per‑host cap (“one look, move on”) keep you fast and friendly.
+- Don’t screenshot logins or fetch authenticated paths; `webscout` is reconnaissance, not rummaging.
+
+One more useful extraction: reading just enough to triage content policies at scale without becoming “that person” in the SOC channel:
+
+```bash
+# Pull just status + CSP/HSTS for a quick security header score
+cat subs.txt \
+ | webscout -c 40 -json \
+ | jq -r '.[] | [.host, .http.status, (.headers.csp // ""), (.headers.strict_transport_security // "")] | @tsv'
+```
+
+And because we all love a neat handoff, here’s a report template your future self will actually reuse.
+
+Report snippet (defender/eng-friendly):
+
+```
+Title: Recon flyover — header posture, email policy, and hosting hints
+
+Scope: example.com (123 live hosts)
+Summary:
+  - Security headers: 37 hosts missing CSP; 22 missing HSTS
+  - Email: DMARC p=none for apex; SPF include depth up to 6
+  - Hosting: 64% behind managed CDN (inferred via CNAME/server/favhash)
+Evidence:
+  - Headers: see summary.tsv (host, status, server, csp, dmarc)
+  - DMARC: dig +short TXT _dmarc.example.com → v=DMARC1; p=none; aspf=r; adkim=r
+  - CDN hints: consistent CNAMEs (*.cdnvendor.net), server header = cloudflare, favicon mmh3= 873269302
+Recommendations:
+  - Add CSP (start with default-src 'self'; frame-ancestors 'none') and enable HSTS on HTTPS apex
+  - Move DMARC to p=quarantine or reject after alignment review; reduce SPF include depth (<5)
+  - Track CDN config in change control to prevent “mystery headers”
+Notes: Metadata-only collection; no authenticated paths or brute forcing performed.
+```
+
+`webscout` is about momentum. Collect the 80% that lets you decide “go deeper” vs “move on,” and do it with the bedside manner of a considerate house guest. Get your signals, write your notes, and land the helicopter before anyone notices the rotor wash.
+
