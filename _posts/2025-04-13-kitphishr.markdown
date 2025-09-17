@@ -7,6 +7,14 @@ permalink: /kitphishr/
 ---
 *Featuring open directories, forgotten credential dumps, and a security researcher with way too much disk space.*
 
+**TL;DR:** enumerate obviously open directories and pull exposed phishing kits for research/IOC extraction — do not access anything non-public.
+
+```bash
+cat hosts.txt | kitphishr -c 30 -out loot | tee findings.csv
+```
+
+Use it: https://github.com/cybercdh/kitphishr
+
 Reginald Q. Phisherton III (self-appointed) makes phishing kits the way a first-year student makes spaghetti: in bulk, with enthusiasm, and directly into the sink. He posts whole webroots to `/var/www/html` like it’s 2002, names his credential logs `creds.txt`, and zips the entire mess without a password because why not let fate decide.
 
 On a wet afternoon I pointed [kitphishr][gh-kitphishr] at a dozen suspicious hosts. Think of it as “museum night security for bad webservers”: it walks predictable paths like `/login/`, `/admin/`, `/panel/`, peeks for open directories, and sniffs out `.zip` files left lying around like gym bags. If there’s a kit, it fetches it; if there’s a `creds.txt`, it gently screams.
@@ -37,6 +45,14 @@ Prefer a single-file fetch against a known open path? Respect robots.txt and loc
 
 ```bash
 curl -fsSL "$base/paypal/credentials.zip" -o loot/credentials.zip || echo "nope"
+```
+
+Copy me:
+
+```bash
+# Minimal pipeline: hosts -> kits -> IOCs
+cat hosts.txt | kitphishr -c 30 -out loot | tee kits.csv
+fd -e zip loot -x unzip -l {} \; | rg -i "(creds\.|sendmail|process\.php|/admin)" | tee iocs.txt
 ```
 
 Once you’ve got a kit, quick triage in Python helps separate “cringe” from “court exhibit”:
@@ -92,3 +108,18 @@ Rules that keep you safe and useful:
 [Kitphishr][gh-kitphishr] is open source and enjoys long walks through open directories. Reginald, if you’re reading this: stop calling it `creds.txt`. Call it `totally_not_credentials.txt` like a professional. Kidding. Please don’t.
 
 [gh-kitphishr]:https://github.com/cybercdh/kitphishr.git
+
+Report snippet (to hosting/abuse or platform):
+
+```
+Title: Publicly exposed phishing kit directory and plaintext credential sink
+
+Host: suspicious.example (/paypal/)
+Evidence:
+  - Directory listing publicly accessible at https://suspicious.example/paypal/
+  - Zip present: credentials.zip (hash: <SHA256>)
+  - Kit files include process.php and creds.txt (listing only; contents not accessed)
+Impact: Live credential capture and reuse by third parties; brand abuse; user compromise.
+Actions taken: Collected file names and hashes only; no victim data accessed.
+Recommended fix: Disable directory listing; remove kits; rotate any compromised credentials.
+```

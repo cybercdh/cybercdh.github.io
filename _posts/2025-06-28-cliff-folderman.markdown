@@ -8,6 +8,14 @@ permalink: /cliff-obsidian-novel/
 
 *Featuring: desk lamp flickers, empty mugs, and the slow unraveling of one man's sanity - powered by markdown.*
 
+**TL;DR:** build an Obsidian vault for investigations; link cases/people/companies with Templater + Dataview, then query patterns instead of drowning in PDFs.
+
+```bash
+# Copy me: starter skeleton
+mkdir -p vault/{cases,people,companies,addresses,templates,scripts,dashboards}
+echo "---\nstatus: Open\n---" > vault/cases/missing-hedge-fund-money.md
+```
+
 **Prologue — The Man Who Loved Spreadsheets Too Much**
 
 Before we descend into this particular circle of markdown hell, you need to understand something about Cliff Folderman. He wasn't always a note-taking zealot who spoke in backlinks and dreamed in graph views. No, Cliff used to be normal. Well, as normal as a private investigator who specialized in financial fraud could be.

@@ -8,6 +8,14 @@ permalink: /tracr/
 
 *Featuring: terrible manual processes, a tool called tracr, and a man who should have been doing laundry instead of registering abandoned nameservers.*
 
+**TL;DR:** scan subdomains for dangling nameservers (REFUSED/SERVFAIL or unresolvable NS) and report clearly with reproducible evidence.
+
+```bash
+assetfinder -subs-only target.com | tracr -c 50 -v
+```
+
+Use it: https://github.com/cybercdh/tracr
+
 Meet Derek. Derek traces DNS by hand. He is strong, he is brave, he is one `dig +trace` away from seeing sounds. Somewhere around subdomain 247 I realized computers are better at repetitive pain than I am, and tracr happened.
 
 Think of DNS as museums handing off a package across rooms. `+trace` walks you room-to-room until the last-but-one room says, “These are the official guides.” If those guides are cardboard cutouts (REFUSED, SERVFAIL, or unresolvable), the last room is at the mercy of whoever animates the cutouts first.
@@ -99,6 +107,17 @@ Install it:
 go install github.com/cybercdh/tracr@latest
 ```
 
+Copy me:
+
+```bash
+# Minimal scan + sanity-check
+assetfinder -subs-only example.com > subs.txt
+cat subs.txt | tracr -c 40 -v | tee vulns.txt
+
+# verify one finding
+ns=ns1.abandoned-hosting.com; dig @"$ns" example.com A +norecurse
+```
+
 Rules of engagement so we all keep getting invited back:
 
 - Only test where you have permission.
@@ -108,3 +127,17 @@ Rules of engagement so we all keep getting invited back:
 The point isn’t just DNS. It’s noticing when your brain is doing what a loop could do, and then writing the loop so your brain can go outside occasionally.
 
 Be like tracr: lazy on purpose, fast by design, polite to DNS.
+
+Report snippet (bug bounty/responsible disclosure):
+
+```
+Title: Dangling nameserver enables subdomain takeover
+
+Target: example.com (affects: api.example.com, cdn.example.com)
+Evidence:
+  - dig +trace api.example.com → authority NS: ns1.abandoned-hosting.com
+  - dig @ns1.abandoned-hosting.com example.com A → REFUSED (consistent across retries)
+Impact: Attacker registering/operating the nameserver could answer authoritatively, enabling takeover and phishing.
+Actions taken: No registration or exploitation; discovery only.
+Recommended fix: Update NS to active servers or remove stale delegations; verify authoritative answers.
+```

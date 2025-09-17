@@ -7,6 +7,14 @@ permalink: /nsfckup/
 ---
 *Featuring DNS disasters, sausage-fingered sysadmins, and one deeply unimpressed wife.*
 
+**TL;DR:** find mis-typed nameservers that don’t resolve and could be registered; pipe domains into `nsfckup` and review flagged ones.
+
+```bash
+cat domains.txt | nsfckup -c 50 -v
+```
+
+Use it: https://github.com/cybercdh/nsfckup
+
 I did not set out to accidentally gain partial control of a company’s internet. I was supposed to be watching a wholesome TV show about animated dogs learning emotional resilience. Instead I was in my terminal, aggressively ignoring my family and running [nsfckup][gh-nsfckup] — a DNS recon tool whose name tells you everything about its vibe and nothing about its legal department.
 
 “Are you still doing that DNS thingy?” my wife asked from the living room, in the tone people reserve for toddlers who have found permanent marker.
@@ -128,6 +136,13 @@ nsfckup example.com
 cat domains.txt | nsfckup -c 50 -v
 ```
 
+Copy me:
+
+```bash
+# Minimal pipeline: domains -> findings
+cat domains.txt | nsfckup -c 40 -v | tee ns-findings.txt
+```
+
 What nsfckup actually checks (in slightly more adult clothes):
 
 - Nameserver targets exist and resolve to at least one address.
@@ -146,3 +161,18 @@ Typos are human. DNS is not. It’s a very literal machine wearing a tie. If you
 Disclaimer: the affected domain was not actually “awseomehosting.com.” Which means, yes, you could still go buy it. Please don’t. Or do, and then write a responsible disclosure email so polite it makes the recipient weep.
 
 [gh-nsfckup]:https://github.com/cybercdh/nsfckup.git
+
+Report snippet (paste into your program/owner):
+
+```
+Title: Potential nameserver typo enables subdomain/zone control
+
+Domain: example.com
+Observed NS: ns1.awseomehosting.com (unresolvable), ns2.awesomehosting.com, ...
+Evidence:
+  - dig NS example.com +trace → ns1.awseomehosting.com
+  - dig +short ns1.awseomehosting.com → (no A/AAAA)
+Impact: Delegation to an unresolvable (potentially registrable) NS could allow an attacker to serve authoritative DNS for the zone, enabling subdomain takeover, phishing, or mail interception.
+Actions taken: No exploitation performed and no infrastructure registered. Discovery only.
+Recommended fix: Correct NS entries; consider registering common typos; add change control for DNS.
+```

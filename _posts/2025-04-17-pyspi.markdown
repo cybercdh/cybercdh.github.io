@@ -7,6 +7,14 @@ permalink: /pyspi/
 ---
 *Featuring typos, package takeovers, and a man who should be watching Bluey with his kids instead of registering fake Python packages.*
 
+**TL;DR:** find non-existent packages before CI does; block unknown names with a pre-commit and prefer a private index first.
+
+```bash
+awk -F'[#= ]' '{print $1}' requirements.txt | rg -v '^$' | pyspi
+```
+
+Use it: https://github.com/cybercdh/pyspi
+
 The package was called `py-sqllite3`. Two Ls. One reality check. Nestled in a very serious project with badges and sponsors and everything. Normal adults report the typo and go to bed. I wrote a tool and then registered the typo so I could prove the point and then go to bed slightly smug.
 
 Meet Nate. Nate types fast, lints hard, and, once, typed an extra L. Builds are obedient golden retrievers: you throw a package name and they bring back whatever smells right first. If there’s a public package matching your private one—or a typo someone squats—your CI will install it with the innocence of a Disney protagonist.
@@ -76,3 +84,25 @@ And yes, use pyspi when you’re triaging a stray `requirements.txt` from the wi
 Moral: the difference between “solid supply chain” and “lol, oops” is one letter and two guardrails. Choose both.
 
 [gh-pyspi]:https://github.com/cybercdh/pyspi.git
+
+Copy me:
+
+```bash
+# Minimal audit + fix sketch
+awk -F'[#= ]' '{print $1}' requirements.txt | rg -v '^$' | pyspi | tee missing.txt
+git grep -nF "py-sqllite3" | tee todo-fixes.txt
+```
+
+Report snippet (to maintainer or internal team):
+
+```
+Title: Non-existent package referenced in requirements (dependency confusion risk)
+
+Repo: org/repo
+Package(s): py-sqllite3 (NOT_FOUND on PyPI)
+Evidence:
+  - pyspi/JSON query indicates package does not exist
+Impact: Public registration could cause CI to install attacker-controlled package.
+Recommended fix: Correct package name (e.g., pysqlite3), lock with hashes, and prefer private index first in pip.conf.
+Actions taken: No package registration or exploitation; disclosure only.
+```
