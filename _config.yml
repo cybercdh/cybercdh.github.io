@@ -14,3 +14,7 @@ plugins:
 
 google_analytics: G-JHQ35THLPX
 
+# Ensure posts dated slightly in the future still publish
+future: true
+# Optionally set site timezone for date handling
+timezone: Europe/London
