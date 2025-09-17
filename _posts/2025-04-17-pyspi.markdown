@@ -5,60 +5,74 @@ date:   2025-04-17 22:06:00 +0100
 categories: dependency confusion nate
 permalink: /pyspi/
 ---
-*Featuring typos, package takeovers, and a man who really should be watching Bluey with his kids instead of registering fake Python packages.*
+*Featuring typos, package takeovers, and a man who should be watching Bluey with his kids instead of registering fake Python packages.*
 
-It was a quiet Tuesday evening – the kind where the kids are finally asleep, the dishwasher is humming softly, and the TV is politely suggesting that I might want to spend some quality time with my spouse.
+The package was called `py-sqllite3`. Two Ls. One reality check. Nestled in a very serious project with badges and sponsors and everything. Normal adults report the typo and go to bed. I wrote a tool and then registered the typo so I could prove the point and then go to bed slightly smug.
 
-Naturally, I ignored all of that and started poking around GitHub.
+Meet Nate. Nate types fast, lints hard, and, once, typed an extra L. Builds are obedient golden retrievers: you throw a package name and they bring back whatever smells right first. If there’s a public package matching your private one—or a typo someone squats—your CI will install it with the innocence of a Disney protagonist.
 
-Somewhere in the glow of the laptop screen, deep in the forests of starred repositories and half-abandoned forks, I found it: a popular open-source project. Legit, modern, with the sort of README that includes badges for test coverage and a sponsor button. I admired it for a moment. Then I opened its `requirements.txt` and spotted something strange.
+I built [pyspi][gh-pyspi] for this exact 2am gremlin energy: you hand it names, it asks PyPI if they exist, and then it tells you “nope” in a helpful tone.
 
-There it was, nestled innocently among the legitimate packages: `py-sqllite3`. A humble typo. One extra 'l', one moment of keyboard misfire, one missed spellcheck. There was no such package on PyPI. Yet.
-
-This is the point where a normal, healthy adult might report the issue and close their laptop. But I am not that adult. I am the adult who builds tools at night to validate package names while my kids shout, "Dad, are you coming back to finish our Lego?"
-
-### 🎭 The Accidental Villain
-
-Let me introduce you to a developer I’ve named **Nate Pipley**. Nate works at a tech startup you've probably heard of. His team uses microservices. His coffee is strong. His linter is strict. But even Nate isn’t immune to a fat-fingered moment in a `requirements.txt` file.
-
-When Nate typed `py-sqllite3`, he didn’t know he was opening a door. Not just for dependency confusion, but for someone like me to walk in, carefully, quietly, wearing metaphorical gloves and an actual grin.
-
-### 🔎 Enter: `pyspi`
-
-See, I wrote a tool called [pyspi][gh-pyspi] — because sometimes you just want to give a list of Python packages to something and have it tell you which ones don’t exist on PyPI. No YAML. No extra dependencies. No overly enthusiastic log output.
-
-You feed `pyspi` a list of package names. Like:
+Quick win:
 
 ```bash
-cat requirements.txt | awk -F'==' '{print $1}' | pyspi
+# audit a requirements file for ghosts
+awk -F'[#= ]' '{print $1}' requirements.txt | rg -v '^$' | pyspi
 ```
 
-And pyspi checks each one using PyPI’s API, politely asking, “Excuse me, do you exist?” If PyPI shrugs and says, “Never heard of it,” then you’ve found a ghost dependency.
-
-So I ran it on Nate’s project. And sure enough:
+If you don’t want new tools: PyPI has a JSON API. Bring your own `curl`.
 
 ```bash
-py-sqllite3: not found
+pkg=py-sqllite3
+name=$(curl -sS https://pypi.org/pypi/$pkg/json | jq -r '.info.name' 2>/dev/null || echo "")
+test "$name" = "null" -o -z "$name" && echo "$pkg: NOT_FOUND" || echo "$pkg: $name"
 ```
 
-That was all I needed.
+Dependency confusion in one paragraph: you meant “deliver to the private loading bay,” but the courier saw a public door with the same label and dropped your parcel there instead. Now your app depends on a box of rocks named `py-sqllite3`.
 
-### 🤯 The Confusion Bit
-For those unfamiliar with dependency confusion, it's a delightful little vulnerability where your build system installs a public package instead of a private one because it got... confused. If someone registers a package on PyPI that your internal tooling expects to find in a private repo — and the public one gets there first — your build may pull code you didn't intend to.
+My harmless PoC looked like this:
 
-In this case, Nate’s mistake wasn’t a private package gone rogue. It was just a typo. But the effect is similar: `pip install` sees a package name, shrugs, and says, “Sure, I’ll install it — from wherever I find it first.”
+```python
+# setup.py (retired)
+from setuptools import setup
+setup(
+  name='py-sqllite3', version='0.0.0', py_modules=['noop'],
+  install_requires=[],
+)
 
-So I claimed it. I registered `py-sqllite3` on PyPI. Gave it a harmless little `setup.py` that printed a message and did nothing sinister. Then I waited.
+# noop.py
+print("[py-sqllite3] You installed a typo. Please use 'pysqlite3'.")
+```
 
-A few hours later, my log lit up. Someone had installed it. Probably Nate. Maybe his CI/CD pipeline. Possibly a junior developer who'd been told to "just pip install everything."
+Someone installed it. Probably Nate. Maybe his CI. I unpublished, disclosed, and drank water like a responsible adult.
 
-### 🧹 A Happy Ending (Sort Of)
-I unpublished the package. Sent a polite message to the project maintainer. Got a thank-you and a “wow, good catch.” My job was done. And still, my kids were waiting to show me how they’d built a cardboard spaceship that now doubled as a fort.
+Take-home practices that make future-you sleep:
 
-This is how [pyspi][gh-pyspi] was born. Not out of boredom or malice, but out of curiosity — the same kind of curiosity that causes raccoons to open bins and security researchers to reverse-engineer setup.py files.
+- Lock with hashes: `pip-compile --generate-hashes` or `pip install --require-hashes -r requirements.txt`.
+- Pre-commit guard: block unknown names.
 
-Some nights I ship code. Other nights I spot package typos. And on rare occasions, I build something useful while ignoring all the people who would prefer I wasn’t still sitting at my terminal at 10:46pm.
+```yaml
+# .pre-commit-config.yaml
+- repo: local
+  hooks:
+    - id: pypi-exists
+      name: Disallow unknown PyPI packages
+      entry: bash -c 'awk -F"[#= ]" "{print $1}" requirements.txt | rg -v "^$" | while read p; do curl -fsS https://pypi.org/pypi/$p/json >/dev/null || { echo "unknown: $p"; exit 1; }; done'
+      language: system
+```
 
-The moral of the story? Check your dependencies. Especially the ones with hyphens. And if you're Nate Pipley, maybe slow down when you're typing package names. Your CI server — and my free time — will thank you.
+- Audit: `pip-audit` or `uv pip check` for vulnerability and resolution sanity.
+- Namespacing: private indexes first; use `pip.conf` with `--index-url` and `--extra-index-url` ordering so “private wins”.
+
+```ini
+# pip.conf
+[global]
+index-url = https://pypi.mycorp.local/simple
+extra-index-url = https://pypi.org/simple
+```
+
+And yes, use pyspi when you’re triaging a stray `requirements.txt` from the wilderness. It’s faster than arguing with Nate about whether “it worked on my machine.”
+
+Moral: the difference between “solid supply chain” and “lol, oops” is one letter and two guardrails. Choose both.
 
 [gh-pyspi]:https://github.com/cybercdh/pyspi.git

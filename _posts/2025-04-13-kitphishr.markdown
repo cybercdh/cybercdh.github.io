@@ -7,21 +7,11 @@ permalink: /kitphishr/
 ---
 *Featuring open directories, forgotten credential dumps, and a security researcher with way too much disk space.*
 
-I’d like to introduce you to a man named **Reginald Q. Phisherton III**. Reg, as he insists his criminal forums call him, is a career phishing kit author with a fondness for three things: generic PayPal login pages, uploading his source code to webroots like it’s 2002, and never-*ever*-zipping with passwords.
+Reginald Q. Phisherton III (self-appointed) makes phishing kits the way a first-year student makes spaghetti: in bulk, with enthusiasm, and directly into the sink. He posts whole webroots to `/var/www/html` like it’s 2002, names his credential logs `creds.txt`, and zips the entire mess without a password because why not let fate decide.
 
-It was a rainy afternoon when I first pointed [kitphishr][gh-kitphishr] at a few dozen freshly harvested subdomains. The tool had just received its latest OSINT feed scrape, and I was curious to see if the shady corners of the internet had been generous.
+On a wet afternoon I pointed [kitphishr][gh-kitphishr] at a dozen suspicious hosts. Think of it as “museum night security for bad webservers”: it walks predictable paths like `/login/`, `/admin/`, `/panel/`, peeks for open directories, and sniffs out `.zip` files left lying around like gym bags. If there’s a kit, it fetches it; if there’s a `creds.txt`, it gently screams.
 
-They had.
-
-Kitphishr's approach is simple: feed it a list of domains or let it auto-scrape known badlands, then have it quietly poke through the URL paths - `example.com/phishkit/`, `example.com/login/zip/`, `example.com/paypal/credentials.zip` - you get the idea. If there’s an open directory, it peeks inside. If it finds a `.zip`, it grabs it. If that zip contains the exact kind of vintage, amateur phishing setup you’d expect to find on a C-tier Telegram group - jackpot.
-
-Within minutes, I had a neat little zip file titled `pp_secure_login_v2.zip`. Inside: a full phishing site kit pretending to be PayPal, complete with:
-
-- pixel-perfect HTML clone of the PayPal login page (with typos in the footer)
-- a `process.php` file that didn’t process anything securely
-- and a surprise bonus: `creds.txt`
-
-The golden rule of phishing kits is that the bad guys are often worse at OPSEC than their victims. In this case, `creds.txt` was a plain text dump of every email and password entered into the fake login form. It was just sitting there. Public. Unencrypted. In 2025.
+I found `pp_secure_login_v2.zip`. Inside: pixel-approximate PayPal HTML, a `process.php` that logs to plaintext, and yes, our old friend `creds.txt`:
 
 ```php
 $file = fopen("creds.txt", "a");
@@ -29,16 +19,76 @@ fwrite($file, "Email: ".$email." Password: ".$password."\n");
 fclose($file);
 ```
 
-This exact kind of find is what kitphishr was built for. Not just to collect kits for research and signature building, but to expose the many, many Reggies of the phishing world who treat their webservers like personal Dropbox accounts. I’ve collected over 60GB of kits using this method - dozens with hardcoded credential logging paths, admin panel credentials in config files, even one with screenshots of the developer’s desktop (Reginald, buddy, no).
+Open directories are the cyber equivalent of leaving your front door open with a sign that says “We trust the universe.” Here’s the minimum viable curiosity you can apply without any bespoke tooling:
 
-What makes this interesting isn’t just the kits themselves, but the patterns you start to see: reused code, reused directories, reused typos. The same developer might post their kit under different aliases, but forgets to change the copyright year in the footer. It’s like phishing kit forensics, but with more comedy and less lab coats.
+```bash
+# Safe recon on obviously open directories (no auth bypasses)
+base=https://suspicious.example
+wget --recursive --no-parent --no-host-directories --level=1 \
+     --accept ".zip,.tar,.gz" "$base/" -P loot/
 
-[Kitphishr][gh-kitphishr] is open source, and extremely good at what it does—quietly pulling back the curtain on the half-hearted operational security of cybercriminals who think `chmod 777` is a lifestyle choice.
+# List interesting zips and fingerprint common kit files
+fd -e zip -a loot | while read z; do
+  echo "--- $z"; unzip -l "$z" | rg -i "(creds\.|process\.php|sendmail|config|result|panel)" || true
+done
+```
 
-If you're interested in exploring what’s hiding in the dark, dusty corners of shady webservers, or you just want to marvel at how little effort some criminals put into hiding their tracks, check out the project:
+Prefer a single-file fetch against a known open path? Respect robots.txt and local law, but when a directory is deliberately exposed:
 
-[https://github.com/cybercdh/kitphishr][gh-kitphishr]
+```bash
+curl -fsSL "$base/paypal/credentials.zip" -o loot/credentials.zip || echo "nope"
+```
 
-And Reginald, if you're reading this—please stop naming your credential dumps `creds.txt`. You're making it too easy.
+Once you’ve got a kit, quick triage in Python helps separate “cringe” from “court exhibit”:
+
+```python
+import sys, zipfile, hashlib, re
+
+z = zipfile.ZipFile(sys.argv[1])
+paths = z.namelist()
+
+# detect credential sinks
+creds = [p for p in paths if re.search(r"creds?\.(txt|log)$", p, re.I)]
+print("creds files:", creds)
+
+# fingerprint core templates for reuse analysis
+hashes = {}
+for p in paths:
+    if p.endswith(('.php','.html','.js','/login','/index')):
+        h = hashlib.sha1(z.read(p)).hexdigest()
+        hashes.setdefault(h, []).append(p)
+
+print("common code hashes:", len(hashes))
+```
+
+The joy isn’t just in the single kit; it’s in the patterns. Same footer typos, same `sendmail.php`, same admin panel at `/admin/`, sometimes even the same hardcoded panel password left in `config.php`. Collect three kits and you’re basically doing sloppy forensics with a punchline.
+
+kitphishr makes this civilized. You feed it hosts or let it use an OSINT feed; it pokes, downloads, tags, and stashes. You get a tidy folder instead of a browser history that looks like evidence.
+
+Practical pipeline:
+
+```bash
+# 1) Seed with suspicious domains
+cat hosts.txt \
+| kitphishr -c 30 -out loot \
+| tee findings.csv
+
+# 2) Walk the loot and triage
+fd -e zip loot \
+| while read z; do python triage.py "$z"; done
+
+# 3) Pull IOCs for defenders (URLs, hashes, panel endpoints)
+rg -NI "(action=|/process\.php|/sendmail\.php|/admin)" -g "loot/**" | tee iocs.txt
+```
+
+Analogy time: these webroots are messy dorm rooms. You are not “breaking in”; you are standing in the corridor, looking through the open door at the pile of pizza boxes labelled “passwords.txt” and taking notes so you can tell the RA.
+
+Rules that keep you safe and useful:
+
+- Only collect what is publicly, obviously exposed. No guessing, no bypassing.
+- Don’t touch victim data; notify the host/abuse contact and the platform (if any).
+- Prefer hashes/paths over contents in reports; redact aggressively.
+
+[Kitphishr][gh-kitphishr] is open source and enjoys long walks through open directories. Reginald, if you’re reading this: stop calling it `creds.txt`. Call it `totally_not_credentials.txt` like a professional. Kidding. Please don’t.
 
 [gh-kitphishr]:https://github.com/cybercdh/kitphishr.git

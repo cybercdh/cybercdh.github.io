@@ -7,20 +7,17 @@ permalink: /nsfckup/
 ---
 *Featuring DNS disasters, sausage-fingered sysadmins, and one deeply unimpressed wife.*
 
-I never planned to hijack an entire company’s web presence from the comfort of my kitchen table. But as history has taught us, most acts of greatness begin either by accident or with a bored security nerd ignoring their family on a Thursday night.
+I did not set out to accidentally gain partial control of a company’s internet. I was supposed to be watching a wholesome TV show about animated dogs learning emotional resilience. Instead I was in my terminal, aggressively ignoring my family and running [nsfckup][gh-nsfckup] — a DNS recon tool whose name tells you everything about its vibe and nothing about its legal department.
 
-It was just after dinner, or as my wife calls it, *“that magical hour when Dad vanishes into his terminal and forgets his children exist.”* The dog had curled up. The kids were playing a suspiciously quiet game called *“is this food?”* and I was knee-deep in [nsfckup][gh-nsfckup], my freshly built DNS reconnaissance tool, designed to uncover typos in NS records that could lead to full-blown domain takeovers.
+“Are you still doing that DNS thingy?” my wife asked from the living room, in the tone people reserve for toddlers who have found permanent marker.
 
-*“Are you still working on that DNS thingy?”* my wife called from the other room, with the same tone she might also reserve for a child smearing jam on the wall.
+“It’s called nsfckup,” I said, like a man who believes brand awareness is a love language.
 
-*“It’s called nsfckup, actually. Like nslookup, but if it drank coffee and found vulnerabilities instead,”* I replied proudly, as if that would clear anything up.
+She went back to her show. I went back to my crimes against free time.
 
-*"Whatever...”* she said, returning to 'Britain's Got X-Factor on Ice' or whatever else was streaming. She’s used to these evenings.
+Here’s the setup. Imagine the postal system. Your domain is a city. Nameservers are the big sorting offices. If you tell the world “Send all my post to Sorting Office Alpha,” but you accidentally write “Sorting Office Alhpa,” then the lorries dutifully drive to an empty lot. That’s not a delay. That’s a swap-the-keys-under-the-doormat-level problem.
 
-### 🎯 Enter Dave Typowski
-Our tale of chaos truly begins with a man I’ve come to think of fondly as Dave Typowski. Dave is the fictional sysadmin of `precisioncopywriters.com` - a competent, hard-working professional with the unfortunate combination of breakneck typing speed and hands like oven mitts.
-
-Somewhere along the way, Dave typed this into his DNS settings:
+Enter Dave. Dave Types-Fast. Dave is fictional (to protect the innocent) and also real (because we’ve all been Dave). Somewhere in Dave’s DNS, these went in:
 
 ```bash
 ns1.awseomehosting.com
@@ -28,94 +25,124 @@ ns2.awesomehosting.com
 ns3.awesomehosting.com
 ns4.awesomehosting.com
 ```
-To the human eye, it's barely noticeable. But DNS? DNS is about as forgiving as a 2001 Nokia brick - if you spell it wrong, you’re done. For those of you who are now squinting at the screen, look again at `ns1.awseomehosting.com`. It's not so `awseome`. Now, every domain under Dave’s control was trusting a NameServer that didn’t even exist.
 
-### 🕵️‍♂️ How I Found It
-Here’s what [nsfckup][gh-nsfckup] actually does, beneath the sarcasm:
+To the human eye, “awseome” is an endearing quirk. To DNS it’s a hard nope. DNS is a bouncer with a clipboard from 2001: “If your name’s not down exactly, you’re not coming in.”
 
-```golang
-rsps, err := dig.Trace(job.domain)
-for _, rsp := range rsps {
-    for _, ns := range rsp.Msg.Ns {
-        fqdn := strings.TrimSuffix(ns.Header().Name, ".")
-        // Check if NS points to something real
+I pointed nsfckup at Dave’s domain. Under the hood, the tool traces like a caffeinated `dig +trace`, collects the authority section, and sanity-checks each NS target to see if it resolves to anything that resembles a living, breathing nameserver.
+
+Go-ish, simplified:
+
+```go
+// walk the chain and examine the authority section near the apex
+rsps, _ := dig.Trace(domain)
+for i, rsp := range rsps {
+    if i != len(rsps)-2 { // second-to-last: where NS answers live
+        continue
+    }
+    for _, rr := range rsp.Msg.Ns {
+        if rr.Header().Rrtype != dns.TypeNS {
+            continue
+        }
+        ns := strings.TrimSuffix(rr.(*dns.NS).Ns, ".")
+        // Does the NS itself resolve? If not, danger.
+        if _, err := net.LookupHost(ns); err != nil {
+            report(domain, ns, "ns-target-unresolvable")
+        }
     }
 }
 ```
-It runs a `dig +trace` to walk the full DNS path for a domain. Then it inspects each NS record to see if it resolves. If it doesn’t, it could mean one of two things:
 
-* Someone fat-fingered a domain name.
-* Someone fat-fingered a domain name, and nobody noticed for 6 months.
+The trace on Dave’s world produced a chef’s kiss of sadness:
 
-When I ran this on `precisioncopywriters.com` and saw the result of Dave's sausage-fingered gift to the pentesting community:
 ```bash
 $ dig NS precisioncopywriters.com +trace @1.1.1.1
-// ..truncated..
-precisioncopywriters.com. 172800 IN	NS ns1.awseomehosting.com
-precisioncopywriters.com. 172800 IN	NS ns2.awesomehosting.com
-precisioncopywriters.com. 172800 IN	NS ns3.awesomehosting.com
-precisioncopywriters.com. 172800 IN	NS ns4.awesomehosting.com
-// ..truncated..
-couldn't get address for 'ns1.awseomehosting.com': not found
+; <<>> DiG 9.10 <<>> NS precisioncopywriters.com +trace @1.1.1.1
+;; AUTHORITY SECTION:
+precisioncopywriters.com. 172800 IN NS ns1.awseomehosting.com.
+precisioncopywriters.com. 172800 IN NS ns2.awesomehosting.com.
+precisioncopywriters.com. 172800 IN NS ns3.awesomehosting.com.
+precisioncopywriters.com. 172800 IN NS ns4.awesomehosting.com.
+
+;; WARNING: couldn't get address for 'ns1.awseomehosting.com': not found
 ```
 
-I just had to confirm that `awseomehosting.com` was available for registration. I did a quick check for the root domain, to see if it exists:
+At this point the only responsible thing to do was check whether “awseomehosting.com” existed or was one impulse-purchase away from a life choice.
+
+Two quick checks, the belt-and-braces way:
 
 ```bash
-dig awseomehosting.com | grep status:
-;; ->>HEADER<<- opcode: QUERY, status: NXDOMAIN, id: 4060
+# 1) If the zone exists, it’ll usually answer something
+dig +short awseomehosting.com A awseomehosting.com AAAA || echo "no records"
+
+# 2) WhoIs often betrays availability (TLD-dependent wording!)
+whois awseomehosting.com | egrep -i "no match|not found|available" || true
 ```
-Bingo. Dead domain.
 
-### 🛒 And So I Bought It
-The domain was available to register. Naturally, I did what any responsible adult with a credit card and poor impulse control would do - I registered it.
+Result: the domain was as real as my gym membership. Which is how I, a grown adult with both children and a budget, found myself registering a typo on a Thursday night.
 
-*"Why did you just spend £9.99 on ‘awseomehosting.com’?"* my wife asked, not looking away from the TV.
+“Why did you spend £9.99 on ‘awseomehosting.com’?” asked my wife.
 
-*"To save the internet, of course"* I whispered.
+“To save the internet,” I said. “And also because it was funny.”
 
-### 🧨 Consequences of a Sausage-Fingered NS Record
-Registering the domain meant I now had authoritative control over any DNS zone trusting it. Emails? Web traffic? Anything pointing to `*.awseomehosting.com` was mine to handle.
+Registering the typo didn’t just give me bragging rights; it gave me authority. Any zone whose NS included my shiny new mistake would happily ask me for directions. Web, email, TXT—if it delegated via the bad NS, I could answer. That’s not a theoretical, that’s a “please don’t explain a subpoena at dinner” scenario.
 
-This wasn’t just a funny mistake - it was a legit, high-impact vulnerability. All thanks to one typo and a little negligence.
+I emailed Dave. He fixed it in minutes. Somewhere a coffee was spilt, a registrar password was reset, and a junior was told, kindly, to stop mashing the keyboard like it owes them money.
 
-So, being the hero in this tale (and because I didn’t want to explain a subpoena at dinner), I emailed Dave.
+Avoid being Dave? Here’s the fast lane.
 
-> Subject: I sort of accidentally own your internet
+The human-with-a-shell approach:
 
-> Dear Dave,
-
-> Your NS record points to ns1.awseomehosting.com. I now own it. This is not a joke, a phishing attempt, or a ploy to sell you a blockchain.
-
-> Please update your records before someone less friendly comes along.
-
-> Cheers,
-
-> A guy with too much time and too many domain names
-
-To Dave’s eternal credit, he replied within minutes. I like to imagine him knocking over coffee, yelling at the intern, and logging into his registrar with sweaty hands. But hey, he fixed it.
-
-The domain is now safe. DNS restored. Internet preserved. Children still ignored.
-
-### 🛠️ How You Can Avoid Being Dave
-Want to know if you’ve got a Dave-level DNS disaster waiting to happen?
-
-Run:
 ```bash
-$ nsfckup example.com
+# enumerate NS targets, de-dot them, and see if they resolve
+domain=example.com
+dig NS "$domain" +short | sed 's/\.$//' | while read ns; do
+  printf "%-40s -> " "$ns"
+  if ! dig +short "$ns" A "$ns" AAAA | head -1 | grep -qE '.'; then
+    echo "UNRESOLVABLE (potentially registrable or dead)"
+  else
+    echo "ok"
+  fi
+done
 ```
-Or feed it a list of domains:
+
+The slightly-more-serious recon pipeline:
+
 ```bash
-$ cat domains.txt | nsfckup -c 50 -v
+# feed domains, run concurrently, flag likely takeovers
+cat domains.txt \
+| xargs -n1 -P50 -I{} sh -c '
+    ns=$(dig NS "$1" +short | sed "s/\.$//") || exit 0
+    for n in $ns; do
+      dig +short "$n" A "$n" AAAA >/dev/null || echo "$1 -> $n (dead-ns)"
+    done
+  ' -- {}
 ```
 
-It'll scream at you (politely) if you’ve got any NS records pointing to nowhere, and might even save your job.
+The “I value my wrists” version with nsfckup:
 
-### 💡 Final Thoughts
-Typos happen. But when they happen in DNS, they can cascade into something far worse than embarrassment - they can compromise your entire infrastructure.
+```bash
+# single target
+nsfckup example.com
 
-Also, register your own typos before someone else does.
+# many targets, with parallelism and verbose traces
+cat domains.txt | nsfckup -c 50 -v
+```
 
-Disclaimer: the affected domain was not actually `awseomehosting.com`. Which means, yes - you could still go buy it.
+What nsfckup actually checks (in slightly more adult clothes):
+
+- Nameserver targets exist and resolve to at least one address.
+- The target isn’t an obviously unregistered domain (NXDOMAIN/WhoIs empty).
+- Optional: the server answers authoritatively for the zone (not REFUSED/SERVFAIL forever).
+
+If any of those don’t hold, you’ve probably got a nameserver pointed at a vacant lot with a very inviting “For Lease” sign. That’s the moment to raise a calm, professional report—ideally before a less calm, less professional person does anything creative.
+
+Two tips that will save Future You:
+
+- Buy your own typos. If your brand is “AwesomeHosting,” get the “Awseome” and “Awsome” and “Aweosme” variants before the internet does. It’s cheaper than incident response.
+- Treat nameservers like production databases: change-controlled, peer-reviewed, and never edited after 11pm while semi-feral children ask for water.
+
+Typos are human. DNS is not. It’s a very literal machine wearing a tie. If you tell it to trust “ns1.awseomehosting.com,” it will do so with the unwavering loyalty of a golden retriever fetching the wrong stick for six months.
+
+Disclaimer: the affected domain was not actually “awseomehosting.com.” Which means, yes, you could still go buy it. Please don’t. Or do, and then write a responsible disclosure email so polite it makes the recipient weep.
 
 [gh-nsfckup]:https://github.com/cybercdh/nsfckup.git

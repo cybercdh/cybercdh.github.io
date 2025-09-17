@@ -8,7 +8,7 @@ permalink: /cliff-obsidian-novel/
 
 *Featuring: desk lamp flickers, empty mugs, and the slow unraveling of one man's sanity - powered by markdown.*
 
-## Prologue - The Man Who Loved Spreadsheets Too Much
+**Prologue — The Man Who Loved Spreadsheets Too Much**
 
 Before we descend into this particular circle of markdown hell, you need to understand something about Cliff Folderman. He wasn't always a note-taking zealot who spoke in backlinks and dreamed in graph views. No, Cliff used to be normal. Well, as normal as a private investigator who specialized in financial fraud could be.
 
@@ -16,7 +16,7 @@ He had spreadsheets. Beautiful, color-coded Excel masterpieces with VLOOKUP form
 
 Then came the Butterworth case.
 
-## Chapter One - The PDF That Broke the Camel's Spine
+**Chapter One — The PDF That Broke the Camel's Spine**
 
 The email arrived at 2:47 AM on a Tuesday. Subject line: "You're going to want to see this."
 
@@ -30,7 +30,7 @@ Cliff opened page one. His left eye twitched. By page 47, he'd consumed his body
 
 Gerald, being a lamp, offered no response. But the universe did.
 
-## Chapter Two - Enter Obsidian (Or: How I Learned to Stop Worrying and Love the Graph)
+**Chapter Two — Enter Obsidian (Or: How I Learned to Stop Worrying and Love the Graph)**
 
 A friend—let's call him Marcus because that's his name and he owes me twenty bucks—suggested Obsidian. "It's just a markdown editor," Marcus said, dramatically understating things like he always does.
 
@@ -77,13 +77,13 @@ Possibly both.
 
 That bit between the `---` marks? That's YAML front matter, and it's about to become Cliff's best friend. Think of it as metadata on steroids—structured data that plugins can query, sort, and manipulate. But we're getting ahead of ourselves.
 
-## Chapter Three - The Gary Butterworth Enigma
+**Chapter Three — The Gary Butterworth Enigma**
 
 Gary Butterworth was not a simple man. His LinkedIn claimed he was a "Synergy Catalyst and Blockchain Evangelist," which Cliff translated as "probably commits fraud." His Companies House records showed 47 different companies, all registered to the same address: a fish and chips shop in Basingstoke that had been closed since 2019.
 
 Cliff needed to create a person note for Gary, but typing the same structure repeatedly would drive him madder than he already was. Enter: Templates.
 
-### The Templater Revolution
+The Templater Revolution
 
 Obsidian's Templater plugin is like having a very efficient assistant who never complains about your coffee breath. Cliff created a template called `people-template.md`:
 
@@ -156,7 +156,7 @@ When Cliff created "Gary Butterworth" using this template, magic happened:
 
 The Graph View, previously showing a lonely single node, now displayed two connected dots. Cliff felt a dopamine hit usually reserved for solving crossword puzzles or finding money in old jacket pockets.
 
-## Chapter Four - The Shell Company Shuffle
+**Chapter Four — The Shell Company Shuffle**
 
 This is where our story takes a turn toward the absurd. Gary Butterworth, it turned out, was less a person and more a one-man corporate registry. The man had more shell companies than a beach has actual shells.
 
@@ -169,7 +169,7 @@ Cliff's investigation revealed:
 
 Manual data entry would take weeks. But Cliff had discovered something beautiful: the Companies House API. And more importantly, he'd learned how to make Obsidian fetch data automatically.
 
-### The API Integration That Changed Everything
+The API Integration That Changed Everything
 
 Cliff created `company-template.md` with embedded JavaScript that would:
 1. Fetch company data from Companies House
@@ -177,7 +177,7 @@ Cliff created `company-template.md` with embedded JavaScript that would:
 3. Create notes for any addresses found
 4. Link everything together in a beautiful web of potentially criminal connections
 
-Here's the template that started it all:
+Here's the template that started it all (and a CLI peek if you like terminals):
 
 ```markdown
 <%*
@@ -258,6 +258,17 @@ tags: [person, auto-generated]
 %>
 ```
 
+Or, if you want to eyeball a company from the shell before you make a note:
+
+```bash
+# quick Companies House glance (requires API key)
+API_KEY=xxxx
+COMP=12834567
+curl -sSL -u "$API_KEY:" \
+  "https://api.company-information.service.gov.uk/company/$COMP" \
+ | jq '{name,status,company_number,incorporation_date}'
+```
+
 And here's the main logic from [company_fetch.js][gh-company-fetch] that powers it all:
 
 ```javascript
@@ -300,7 +311,7 @@ When Cliff ran this template for "Ferret Fantastic Ventures" (company number: 12
 
 His Graph View now looked like a spider's web designed by someone with OCD and a passion for financial crime.
 
-## Chapter Five - The Ferret Connection
+**Chapter Five — The Ferret Connection**
 
 Now, about those ferrets.
 
@@ -311,7 +322,7 @@ It started innocently enough. One company—"Ferret Fantastic Ventures"—seemed
 
 Cliff needed a way to query across all his notes. Enter: Dataview.
 
-### The Query That Revealed Everything
+The Query That Revealed Everything
 
 Dataview is Obsidian's way of turning your notes into a queryable database. Think SQL, but for markdown files. Cliff wrote his first query:
 
@@ -331,13 +342,13 @@ Seven companies appeared. All incorporated within six months of each other. All 
 
 Gerald the lamp flickered, either in agreement or because it needed a new bulb.
 
-## Chapter Six - The Plot Thickens (Like Day-Old Coffee)
+**Chapter Six — The Plot Thickens (Like Day-Old Coffee)**
 
 Cliff's Obsidian vault had grown from a single note to a sprawling investigation headquarters. The Graph View now resembled a small galaxy, with Gary Butterworth as its supermassive black hole, pulling all other notes into his orbit.
 
 But raw data wasn't enough. Cliff needed to see patterns, timelines, connections. Time for more Obsidian magic.
 
-### Building the Investigation Dashboard
+Building the Investigation Dashboard
 
 Using Dataview and some creative markdown, Cliff built a dashboard that would make Scotland Yard jealous. He created a file called `investigation-dashboard.md`:
 
@@ -401,7 +412,7 @@ GROUP BY type
 
 The dashboard updated automatically as Cliff added notes. It was like having a crime board that organized itself, minus the red string and pushpins.
 
-## Chapter Seven - The Address Anomaly
+**Chapter Seven — The Address Anomaly**
 
 Here's where things got weird. (Weirder than the ferret thing, if you can believe it.)
 
@@ -452,7 +463,7 @@ But the real revelation came when Cliff mapped the addresses. Using the Obsidian
 
 Gerald remained noncommittal.
 
-## Chapter Eight - The Unraveling
+**Chapter Eight — The Unraveling**
 
 Armed with his Obsidian vault—now containing 847 notes, 3,291 backlinks, and one increasingly sentient investigation—Cliff prepared for the final push.
 
@@ -492,7 +503,7 @@ He created a timeline using the Timelines plugin:
 
 The pattern was clear. Gary wasn't just laundering money—he was building something. Something that required shell companies, suspicious addresses, and an ungodly number of ferrets.
 
-## Chapter Nine - The Reveal
+**Chapter Nine — The Reveal**
 
 Cliff's phone rang at 3 AM. Unknown number.
 
@@ -512,7 +523,7 @@ There was a long pause. Then: "It's not what you think."
 
 An even longer pause. "Okay, it's exactly what you think."
 
-## Chapter Ten - The Resolution (Sort Of)
+**Chapter Ten — The Resolution (Sort Of)**
 
 As it turned out, Gary Butterworth had indeed embezzled millions to fulfill his lifelong dream: Ferretopia, a ferret-themed wonderland where the small, slinky creatures would reign supreme. The shell companies were to hide the money trail. The pentagram of addresses was... actually, that was just a weird coincidence that even Gary couldn't explain.
 
@@ -520,7 +531,7 @@ As it turned out, Gary Butterworth had indeed embezzled millions to fulfill his 
 
 Cliff's Obsidian vault had cracked the case. Every connection, every company, every ferret-related invoice had led to this moment. He selected all his notes and exported them as a single PDF for the prosecution. It was 2,847 pages long. The circle was complete.
 
-## Epilogue - The Tools of the Trade
+**Epilogue — The Tools of the Trade**
 
 Six months later, Cliff gave a talk at the International Conference of Overly Complicated Investigation Methods. His presentation: "How Obsidian Saved My Sanity (And Caught a Ferret-Obsessed Embezzler)."
 
