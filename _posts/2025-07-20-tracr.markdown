@@ -1,12 +1,12 @@
 ---
 layout: post
-title: "How I Automated My Way to £25k by Teaching DNS Servers to Refuse Me (And Why You Should Too)"
+title: "Derek vs. The Thousand Traces: Teaching DNS to Say ‘REFUSED’ So You Don’t Have To"
 date: 2025-07-20 14:30:00 +0100
 categories: bug-bounty dns automation
 permalink: /tracr/
 ---
 
-*Featuring: terrible manual processes, a tool called tracr, and a man who should have been doing laundry instead of registering abandoned nameservers.*
+*Featuring: insomnia, a tool named tracr, and DNS servers that finally learned how to say “no.”*
 
 **TL;DR:** scan subdomains for dangling nameservers (REFUSED/SERVFAIL or unresolvable NS) and report clearly with reproducible evidence.
 
@@ -16,7 +16,9 @@ assetfinder -subs-only target.com | tracr -c 50 -v
 
 Use it: https://github.com/cybercdh/tracr
 
-Meet Derek. Derek traces DNS by hand. He is strong, he is brave, he is one `dig +trace` away from seeing sounds. Somewhere around subdomain 247 I realized computers are better at repetitive pain than I am, and tracr happened.
+Meet Derek. Derek traces DNS by hand. Derek is a good person with a bad hobby. He reads RFCs like bedtime stories and wakes up wondering if an SOA’s minimum TTL is spiritual or literal. On the night our story begins, Derek had a thousand subdomains, a mug named Gerald, and the sinking feeling that if he ran one more `dig +trace` he would start hearing colors.
+
+Somewhere around `support-preprod-analytics.dev.example.com` the enlightenment arrived that always precedes truly questionable coding: “What if I just teach the computer to hate tedium as much as I do?” tracr was born at 02:47, alongside a promise to do laundry “tomorrow.”
 
 Think of DNS as museums handing off a package across rooms. `+trace` walks you room-to-room until the last-but-one room says, “These are the official guides.” If those guides are cardboard cutouts (REFUSED, SERVFAIL, or unresolvable), the last room is at the mercy of whoever animates the cutouts first.
 
@@ -34,7 +36,7 @@ dig @ns1.abandoned.com example.com
 assetfinder -subs-only target.com | tracr -c 50 -v | tee vuln.txt
 ```
 
-Under the hood it’s simple, just… fast. Pseudocode in Go-ish:
+Under the hood it’s simple, just… fast. Pseudocode in Go‑ish:
 
 ```go
 type Target struct { domain string; servers []string }
@@ -82,13 +84,13 @@ for w := 0; w < 40; w++ {
 // feed jobs from stdin
 ```
 
-False-positive control so you don’t report “my Wi‑Fi blinked” as a vuln:
+False‑positive control so you don’t report “my Wi‑Fi blinked” as a vuln:
 
 - Retry on transient NXDOMAIN/timeout; only flag consistent REFUSED/SERVFAIL.
 - Cache NS lookups per run; avoid hammering the same dead server.
 - Randomize resolver choice; some public resolvers paper over weirdness.
 
-My first real run saved six hours and paid £3,200. The next found another at £5,800. After a few months the total was £25k and a personality that no longer smelled like `dig` output.
+Derek’s first adult run saved six hours and paid £3,200. The next found another at £5,800. After a few months the total was £25k and a personality that no longer smelled like `dig` output. More importantly, the reports stopped sounding like prophecies and started looking like evidence.
 
 Practical pipeline you can copy without thinking too hard:
 
@@ -126,7 +128,7 @@ Rules of engagement so we all keep getting invited back:
 
 The point isn’t just DNS. It’s noticing when your brain is doing what a loop could do, and then writing the loop so your brain can go outside occasionally.
 
-Be like tracr: lazy on purpose, fast by design, polite to DNS.
+Be like tracr: lazy on purpose, fast by design, polite to DNS. Gerald approves.
 
 Report snippet (bug bounty/responsible disclosure):
 
