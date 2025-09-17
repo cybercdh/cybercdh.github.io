@@ -1,0 +1,93 @@
+---
+layout: post
+title: "Open Directory Recon with dirlstr: Be the Web’s Polite Janitor"
+date: 2025-09-17 10:55:00 +0100
+categories: recon http buckets directories ioc
+permalink: /dirlstr/
+---
+
+*Featuring unlocked cupboards, politely averted eyes, and the art of collecting IOCs without touching the jewelry drawer.*
+
+**TL;DR:** scan URLs for open directory listings and exposed bucket indexes; collect filenames and IOCs without accessing sensitive contents.
+
+```bash
+cat urls.txt | dirlstr -c 40 | tee open-dirs.txt
+```
+
+Use it: https://github.com/cybercdh/dirlstr
+
+Meet Dina Directory. Dina doesn’t break in; she just notices which doors are already open and leaves a helpful note. `dirlstr` finds classic “Index of /” directory pages and cloud bucket listings (S3/GCS/Azure) from a list of URLs, so you can generate actionable IOCs without rummaging.
+
+Copy me:
+
+```bash
+# Minimal: URLs -> open listings -> filenames/paths
+cat urls.txt \
+ | dirlstr -c 40 \
+ | tee open-dirs.txt
+
+# Extract likely IOCs (admin panels, zips, creds-y names) from listing output
+rg -NI "(\.zip|\.tar|\.gz|/admin/|/panel/|creds\.|passwords?\.|backup|db\.sql)" open-dirs.txt | tee iocs.txt
+```
+
+If you don’t have URLs yet, cheap ways to get candidates:
+
+```bash
+# 1) Enumerate subdomains and probe for HTTP
+assetfinder -subs-only example.com | httpx -silent -status-code -follow-redirects | tee urls.txt
+
+# 2) Append a handful of common directory paths (polite breadth, not brute force)
+while read u; do
+  for p in / /backup/ /uploads/ /download/ /public/ /logs/; do
+    echo "$u$p"
+  done
+done < <(cut -d' ' -f1 urls.txt) | tee url-paths.txt
+
+# 3) Scan
+cat url-paths.txt | dirlstr -c 40 | tee open-dirs.txt
+```
+
+What `dirlstr` flags in the wild:
+
+- Classic directory indexes (Apache/nginx/IIS “Index of /” with file listings)
+- S3-style XML listings (ListBucketResult) and cloud storage index pages
+- Obvious listing footprints without fetching large files (filenames only)
+
+Curl a single path safely (listing only):
+
+```bash
+url=https://example.com/uploads/
+curl -fsSL --max-time 5 "$url" | head -n 80 | rg -n "Index of|<Key>|<Title>Directory listing"
+```
+
+Redaction-first triage: build useful signals without opening sensitive files:
+
+```bash
+# Parse filenames from HTML/XML listings only; skip downloads
+rg -No "href=\"([^\"]+)\"" open-dirs.txt | sed -E 's/.*href=\"([^\"]+)\".*/\1/' \
+  | rg -v '^\?dir=' | tee filenames.txt
+```
+
+Safety and etiquette (keeps programs happy and you invited back):
+
+- Only collect what the server/listing returns by default; do not guess secret paths.
+- Don’t fetch large objects or archives; list filenames and hashes when possible.
+- Respect robots.txt for crawlers; even when not binding, it’s a vibe check.
+- Concurrency 20–50; back off on 429/503; per‑host cap.
+
+Report snippet (platform/hosting/abuse):
+
+```
+Title: Public directory listing exposes file inventory (no auth required)
+
+Host/Path: https://example.com/uploads/
+Evidence:
+  - Directory index accessible without authentication (screenshot or first 50 lines)
+  - Filenames include archives and configuration files (see filenames.txt)
+Impact: Leakage of internal filenames/structure; potential download of sensitive data by third parties
+Actions taken: Listing enumerated; no file contents accessed or downloaded
+Recommended fix: Disable directory listing; restrict access; remove sensitive files from webroot
+```
+
+Being the web’s polite janitor is simple: notice the open door, log what’s plainly visible, and leave a neat note so someone can close it. No rummaging, no drama, maximum usefulness.
+
