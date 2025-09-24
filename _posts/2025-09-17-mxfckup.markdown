@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "Max and the Great Email Extinction Event: How One Person Saved Christmas (in July)"
-date: 2025-09-17 10:20:00 +0100
+date: 2025-09-24 10:20:00 +0100
 categories: email dns mx spf dmarc bimi recon
 permalink: /mxfckup/
 ---

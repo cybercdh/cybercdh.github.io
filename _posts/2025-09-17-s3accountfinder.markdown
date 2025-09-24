@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "Becky and the Haunted Bucket: Attributing S3 Without Touching a Single Object"
-date: 2025-09-17 10:40:00 +0100
+date: 2025-09-24 10:40:00 +0100
 categories: cloud s3 recon attribution buckets
 permalink: /s3accountfinder/
 ---

@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "Dina and the Department Store of Despair: A Tale of Too Many Open Doors"
-date: 2025-09-17 10:55:00 +0100
+date: 2025-09-24 10:55:00 +0100
 categories: recon http buckets directories ioc
 permalink: /dirlstr/
 ---

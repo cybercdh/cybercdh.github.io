@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "Poppy and the Public Suffix Pandemonium: A DNS Boundary Bedtime Story"
-date: 2025-09-17 11:10:00 +0100
+date: 2025-09-24 11:10:00 +0100
 categories: recon dns psl takeovers cookies
 permalink: /psl/
 ---
