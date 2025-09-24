@@ -1,14 +1,14 @@
 ---
 layout: post
-title: "Poppy Suffix and the Boundary Lines: PSL‑Powered Hunting for Dangling Things"
+title: "Poppy and the Public Suffix Pandemonium: A DNS Boundary Bedtime Story"
 date: 2025-09-17 11:10:00 +0100
 categories: recon dns psl takeovers cookies
 permalink: /psl/
 ---
 
-*Featuring suffix magic, cookie drama, and a marketing site that really wanted to retire in 2019 but kept showing up like an uninvited plus-one.*
+*Featuring a security engineer who reads DNS specs for fun, boundaries that browsers respect (unlike humans), and the ghost of a marketing campaign that refuses to die.*
 
-**TL;DR:** use `psl` to pull provider-specific “public suffix” domains (e.g., `github.io`, `s3-website-*.amazonaws.com`, `herokuapp.com`), then scan your CNAMEs that point into those suffixes for dangling resources and cookie-scope surprises.
+**TL;DR:** The Public Suffix List isn't just for cookies—it's a treasure map to your dangling CNAMEs. Find them before someone else does.
 
 ```bash
 # Pull Amazon-related PSL entries, then hunt CNAMEs ending in them
@@ -18,7 +18,15 @@ cat subs.txt | dnsx -cn | rg -f aws-psl.txt | tee cnames-into-aws.txt
 
 Use it: https://github.com/cybercdh/psl
 
-Meet Poppy Suffix. Poppy is what happens when a linguist and a network engineer accidentally share a brain. She cares deeply about boundary markers—both in sentences and in DNS. Browsers use the Public Suffix List (PSL) to decide “you may not set a cookie for .com because no.” The same list also—quietly, helpfully—marks vendor domains where the label under the line belongs to users. If your CNAME points into one of those and the user space is empty, well, congratulations: you’ve built a very fancy Welcome Mat.
+Poppy Suffix didn't choose the DNS life; the DNS life chose her when she accidentally read RFC 6265 during what was supposed to be a lunch break. Three hours later, she emerged with an unsettling understanding of cookie boundaries and the realization that most of the internet was held together with CNAME records and wishful thinking.
+
+Her coffee mug (Gerald V, artisanal, slightly pretentious) witnessed the moment of revelation: "Gerald, what if I told you that browsers know exactly where ownership boundaries are, and we're just... not using that information?"
+
+Gerald V, being handcrafted pottery, offered no response but somehow conveyed deep skepticism.
+
+The Public Suffix List (PSL) is the internet's most underappreciated bouncer. It tells browsers things like: "You cannot set a cookie for all of .com, you absolute muppet" and "github.io is a boundary—everything before it belongs to users, not GitHub." This second fact is where things get spicy.
+
+Poppy discovered that her company had 47 CNAMEs pointing to various platform-as-a-service providers. Normal, right? Except 12 of them pointed to resources that no longer existed. Like archaeological ruins, but instead of ancient pottery, it was `spring-sale-2019.herokuapp.com` still bravely CNAMEd from `deals.company.com`.
 
 Poppy ran my `psl` tool, which fetches and filters the PSL. The PSL has entries like:
 
@@ -67,7 +75,19 @@ done | tee ghp-triage.txt
 
 You get the idea: PSL → provider suffixes → your CNAMEs into those suffixes → provider‑specific existence checks. Poppy’s teabag had barely unfurled and she already had a short list of “this used to exist” candidates.
 
-Our heroine Poppy found a different ghost than Becky’s: `blog-assets.example.com` → `example-project.github.io`. The GitHub repo was archived in 2021; the pages site was a polite 404 with the subtext “you could make this if you wanted.” The PSL said `github.io` is a public suffix, meaning the label before it—`example-project`—is user space, not vendor space. Poppy did not create anything. She did what polite hunters do: confirmed the pattern, wrote a crisp report, and let someone else push the buttons.
+The investigation that followed was equal parts archaeology and horror movie. Poppy's findings read like a digital estate sale inventory:
+
+**The Graveyard Shift:**
+- `blog-2018.company.com` → `company-blog-old.github.io` (404 since 2020)
+- `promo.company.com` → `summer-deals.herokuapp.com` (Heroku: "There's nothing here, yet.")
+- `cdn-legacy.company.com` → `company-assets.s3-website-us-east-1.amazonaws.com` (NoSuchBucket)
+- `partners.company.com` → `partner-portal.azurewebsites.net` (This web app has been stopped)
+
+"Gerald," Poppy said, holding the mug like a therapy animal, "we're one bored teenager away from hosting a phishing site on our own subdomain."
+
+The beautiful (terrifying?) thing about the PSL is that it tells you exactly where the danger zones are. If `github.io` is a public suffix, then `anything-before-it.github.io` is user-controlled territory. Your CNAME is just a redirect sign. If the destination doesn't exist, anyone can build a new destination and your sign will happily point to it.
+
+Poppy didn't just find problems; she found *patterns*. Every abandoned marketing campaign, every "temporary" demo site, every proof-of-concept that became production-ish—they all left CNAMEs behind like breadcrumbs for future attackers.
 
 Why PSL helps your mental model (and your tea schedule):
 
@@ -117,4 +137,20 @@ Actions taken: No resource creation or claim attempted; discovery only
 Recommended fix: Remove/replace the CNAME or recreate and control the backing resource; add monitoring for CNAMEs into public-suffix providers
 ```
 
-PSL is the world’s quiet boundary marker. Once you see the lines it draws, you’ll stop tripping over cookie scopes and start catching misconfigurations that were hiding in plain sight since 2019.
+The cleanup took a week. Not because it was technically complex, but because each dead CNAME had a story. Marketing didn't know that campaign site was gone. DevOps thought someone else owned that subdomain. That partner portal? "Wait, we have a partner portal?"
+
+By Friday, Poppy had:
+- Removed 12 dangling CNAMEs (each a potential takeover)
+- Documented 23 more that were "probably fine but please check"
+- Implemented a monthly scan using psl + dnsx
+- Created a Slack channel called #dns-ghosts where CNAMEs go to be acknowledged before deletion
+
+The last message to Gerald V, before closing the laptop: "We've drawn the boundaries. We've honored the ghosts. We've prevented the subdomain takeover apocalypse of 2024."
+
+Gerald V maintained artistic silence, but it felt approving.
+
+The PSL isn't just a list—it's a map of the internet's property lines. Once you see them, you can't unsee them. You'll spot dangling CNAMEs like typos in a love letter. You'll understand why that cookie isn't working. You'll finally get why `something.github.io` and `github.io/something` live in completely different universes.
+
+Your CNAMEs are probably pointing to dead things right now. The PSL knows where they are. Poppy knows how to find them. Gerald V is judging you, ceramically.
+
+Go check. Before someone else does.

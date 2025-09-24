@@ -1,14 +1,14 @@
 ---
 layout: post
-title: "Dina and the Open Door: Directory Listings Without Drama"
+title: "Dina and the Department Store of Despair: A Tale of Too Many Open Doors"
 date: 2025-09-17 10:55:00 +0100
 categories: recon http buckets directories ioc
 permalink: /dirlstr/
 ---
 
-*Featuring unlocked cupboards, politely averted eyes, and the art of collecting IOCs without touching the jewelry drawer (or the snacks).*
+*Featuring a security analyst with boundary issues (the good kind), a server that couldn't keep a secret, and the world's most polite directory scanner.*
 
-**TL;DR:** scan URLs for open directory listings and exposed bucket indexes; collect filenames and IOCs without accessing sensitive contents.
+**TL;DR:** Find open directory listings without being that person who reads everyone's diary. Scan, collect IOCs, report responsibly, repeat.
 
 ```bash
 cat urls.txt | dirlstr -c 40 | tee open-dirs.txt
@@ -16,81 +16,113 @@ cat urls.txt | dirlstr -c 40 | tee open-dirs.txt
 
 Use it: https://github.com/cybercdh/dirlstr
 
-Meet Dina Directory. Dina is the colleague who leaves kitchens better than she found them and labels her lunch. She doesn’t break in; she notices which doors are open and leaves a helpful note. This week’s note read: “Your staging server is listing everything in /uploads. Also, your database backups are named backup-final-v3-FINAL.zip. Please sit down.”
+Meet Dina Directory, senior security analyst at Corporate Corp and three-time winner of "Most Likely to Return Your Pen." Dina had principles: never read private files, always knock first, and absolutely never—*never*—download that 4GB database backup just to prove a point. Her coffee mug (Gerald III, ceramic, judgmental) bore witness to her latest crusade: finding every open directory listing before the hackers did.
 
-dirlstr is Dina’s flashlight. It finds “Index of /” directory pages and cloud bucket listings from a list of URLs and lets you collect filenames and IOCs without rummaging in the drawers. It’s recon with manners and a clipboard.
+It started innocently. Tuesday, 3 PM, routine asset review. Dina was clicking through subdomains like a pianist warming up when she hit `staging.corporate-corp.com/uploads/`. Instead of a 403 Forbidden or a login page, Apache greeted her with its most honest face: "Index of /uploads" followed by a parade of files marching down the page like ants at a picnic.
 
-Copy me:
+"Gerald," she said to her mug, "we've got a situation."
+
+The situation was 47 subdomains, each potentially hosting its own digital yard sale. Dina could check them manually, but she'd already done that dance last month and her carpal tunnel was unionizing. Time for automation, but with *manners*.
+
+dirlstr was born from this exact frustration—the tool that finds open doors but doesn't rifle through the medicine cabinet. Think of it as a metal detector for directory listings: it beeps, you investigate, nobody gets arrested.
+
+The tool's philosophy matched Dina's perfectly: observe, don't interact. Like a nature documentarian filming lions—you can see them eating the gazelle, but you don't join the feast.
+
+Here's how Dina's Tuesday became legendary:
 
 ```bash
-# Minimal: URLs -> open listings -> filenames/paths
-cat urls.txt \
- | dirlstr -c 40 \
- | tee open-dirs.txt
+# Step 1: The reconnaissance (like window shopping, but for vulnerabilities)
+assetfinder -subs-only corporate-corp.com | httpx -silent | tee urls.txt
 
-# Extract likely IOCs (admin panels, zips, creds-y names) from listing output
-rg -NI "(\.zip|\.tar|\.gz|/admin/|/panel/|creds\.|passwords?\.|backup|db\.sql)" open-dirs.txt | tee iocs.txt
+# Step 2: The surgical strike (find the open doors)
+cat urls.txt | dirlstr -c 40 | tee open-dirs.txt
+
+# Step 3: The evidence collection (what's visible from the sidewalk)
+rg -NI "(backup|\.sql|\.zip|config|password)" open-dirs.txt | tee concerning-files.txt
 ```
 
-If you don’t have URLs yet, two polite ways to get candidates:
+By 4 PM, Dina had a list. By 4:15, she'd found:
+- `backup-final-FINAL-v2-USE-THIS-ONE.zip` (a classic)
+- `database_dump_2023_do_not_delete.sql` (narrator: they didn't delete it)
+- `passwords_plaintext.txt` (Dina's eye twitched)
+- An entire folder called `/definitely-not-production-data/`
+
+"Gerald," Dina said, "either we're being pranked or IT needs an intervention."
+
+The beauty of dirlstr is its restraint. Where other tools might download everything "for evidence," dirlstr just takes notes. It's the difference between photographing a crime scene and taking home the silverware.
+
+Want to follow Dina's path? Here's your breadcrumb trail:
 
 ```bash
-# 1) Enumerate subdomains and probe for HTTP
-assetfinder -subs-only example.com | httpx -silent -status-code -follow-redirects | tee urls.txt
-
-# 2) Append a handful of common directory paths (polite breadth, not brute force)
-while read u; do
-  for p in / /backup/ /uploads/ /download/ /public/ /logs/; do
-    echo "$u$p"
+# The polite probe (add common paths without hammering)
+while read url; do
+  for path in / /backup/ /uploads/ /tmp/ /logs/ /data/; do
+    echo "${url}${path}"
   done
-done < <(cut -d' ' -f1 urls.txt) | tee url-paths.txt
+done < urls.txt | tee url-candidates.txt
 
-# 3) Scan
-cat url-paths.txt | dirlstr -c 40 | tee open-dirs.txt
+# The scan (concurrent but respectful)
+cat url-candidates.txt | dirlstr -c 40 | tee findings.txt
+
+# The spot-check (verify one manually, for the skeptics)
+curl -fsSL https://staging.corporate-corp.com/uploads/ | head -50
 ```
 
-What dirlstr flags in the wild (Dina’s greatest hits):
+Dina's disclosure email was a masterpiece of professional restraint. Where she wanted to write "YOUR ENTIRE DATABASE IS SHOWING," she instead wrote:
 
-- Classic directory indexes (Apache/nginx/IIS “Index of /” with file listings)
-- S3-style XML listings (ListBucketResult) and cloud storage index pages
-- Obvious listing footprints without fetching large files (filenames only)
+```
+Subject: Security Finding - Directory Listing Enabled
 
-Curl a single path safely (listing only, the “peep through the doorway” approach):
+Dear Security Team,
+
+During routine reconnaissance, I identified publicly accessible directory listings on multiple subdomains. No files were accessed or downloaded during this assessment.
+
+Affected endpoints: [see attached]
+Evidence: Directory indexes return file listings without authentication
+Risk: Information disclosure, potential data exposure
+Remediation: Disable directory indexing in web server configuration
+
+Screenshots attached for verification. Happy to discuss remediation approaches.
+
+Best regards,
+Dina
+P.S. - Please check /uploads/ first. Trust me on this one.
+```
+
+The response came in 12 minutes—a company record. The CISO's reply was just: "Oh god. Fixing now. Thank you. How did we not know about this?"
+
+Dina looked at Gerald. Gerald, being ceramic, offered no answers but excellent moral support.
+
+By Friday, every directory listing was locked down. IT implemented a new policy: directory indexing disabled by default, monthly scans, and a swear jar specifically for whoever named files "final-FINAL-actuallyfinal."
+
+The lessons Dina carved into her notebook (and you should too):
+
+1. **Reconnaissance is not intrusion.** Looking at what's publicly displayed isn't breaking in—it's quality assurance with commitment issues.
+2. **Document everything, download nothing.** Your evidence should fit in an email, not a data center.
+3. **Automate with ethics.** Your tools should be as polite as you'd be in person.
+4. **Report fast, fix faster.** Every hour an open directory exists is an hour someone less polite might find it.
+
+Want the one-liner that started it all? Here:
 
 ```bash
-url=https://example.com/uploads/
-curl -fsSL --max-time 5 "$url" | head -n 80 | rg -n "Index of|<Key>|<Title>Directory listing"
+echo "https://target.com/uploads/" | dirlstr -v
 ```
 
-Redaction-first triage: build useful signals without opening sensitive files (your SOC will thank you):
+If it returns results, you've got work to do. If it doesn't, try more paths. If Gerald starts talking back, you've been at this too long.
 
-```bash
-# Parse filenames from HTML/XML listings only; skip downloads
-rg -No "href=\"([^\"]+)\"" open-dirs.txt | sed -E 's/.*href=\"([^\"]+)\".*/\1/' \
-  | rg -v '^\?dir=' | tee filenames.txt
-```
+The real magic isn't finding the vulnerabilities—it's finding them first, reporting them properly, and sleeping soundly knowing you've made the internet slightly less terrible. Dina does this every Tuesday. Gerald approves, silently, as good mugs do.
 
-Safety and etiquette (keeps programs happy and you invited back):
-
-- Only collect what the server/listing returns by default; do not guess secret paths.
-- Don’t fetch large objects or archives; list filenames and hashes when possible.
-- Respect robots.txt for crawlers; even when not binding, it’s a vibe check.
-- Concurrency 20–50; back off on 429/503; per‑host cap.
-
-Dina’s disclosure email got a grateful “we had no idea” reply and a new policy: directory listing disabled by default, backups out of webroot, and a cron job that doesn’t cry. Here’s the skeleton she used:
-
-Report snippet (platform/hosting/abuse):
+Report template for the prepared:
 
 ```
-Title: Public directory listing exposes file inventory (no auth required)
-
-Host/Path: https://example.com/uploads/
-Evidence:
-  - Directory index accessible without authentication (screenshot or first 50 lines)
-  - Filenames include archives and configuration files (see filenames.txt)
-Impact: Leakage of internal filenames/structure; potential download of sensitive data by third parties
-Actions taken: Listing enumerated; no file contents accessed or downloaded
-Recommended fix: Disable directory listing; restrict access; remove sensitive files from webroot
+Title: Directory Listing Information Disclosure
+Asset: [URL]
+Method: Automated directory listing detection via dirlstr
+Evidence: [First 20 lines of listing]
+Files observed: [Summary, no contents accessed]
+Impact: Unintended information disclosure, potential sensitive data exposure
+Fix: Add "Options -Indexes" to .htaccess or equivalent server config
+Status: Awaiting remediation
 ```
 
-Being the web’s polite janitor is simple: notice the open door, log what’s plainly visible, and leave a neat note so someone can close it. No rummaging, no drama, maximum usefulness.
+Be like Dina. Find the problems. Report them kindly. Keep the internet slightly less horrifying than you found it. Gerald believes in you.

@@ -1,14 +1,14 @@
 ---
 layout: post
-title: "Max in the Mailroom: Fixing Email with Three TXT Records and a Prayer"
+title: "Max and the Great Email Extinction Event: How One Person Saved Christmas (in July)"
 date: 2025-09-17 10:20:00 +0100
 categories: email dns mx spf dmarc bimi recon
 permalink: /mxfckup/
 ---
 
-*Featuring misdirected parcels, TXT spaghetti, and a BIMI logo that looks like it was faxed in 2009 by a pigeon.*
+*Featuring the world's angriest CEO, a mail server that thought it was 1995, and an SPF record that achieved sentience through sheer complexity.*
 
-**TL;DR:** quickly audit MX reachability and policy posture (MX/A/AAAA/PTR, SPF depth, DMARC policy, BIMI presence). Catch breakages that lead to spoofing and dropped mail.
+**TL;DR:** Audit email configurations before they audit you. Find the broken MX records, untangle the SPF spaghetti, and make DMARC actually do something.
 
 ```bash
 cat domains.txt \
@@ -18,9 +18,21 @@ cat domains.txt \
 
 Use it: https://github.com/cybercdh/mxfckup
 
-Meet Max Mailroom. Max is the kind of person who apologizes to printers and labels tape dispensers “you got this.” He also believes email is the postal service with worse uniforms: MX records are sorting centers; SPF/DMARC are the rules about who’s allowed at the back door; BIMI is the big friendly logo that says “no really, it’s us.” This week, the parcels were going missing and the CEO had opinions.
+Max Mailroom was having a day. Not a good day, not a bad day, but the kind of day where you seriously consider whether becoming a forest ranger was still an option at 34. The trigger? A Slack message that simply said: "WHY IS NO ONE GETTING MY EMAILS?!?! - CEO"
 
-Max pointed mxfckup at a list of domains and made tea while it tutted. The results were poetic: an MX that didn’t resolve (“we moved, forgot the forwarding”), an SPF include chain that looked like a family tree (“everyone’s invited”), and a DMARC p=none (“please critique our spam”).
+Three exclamation marks *and* question marks. In caps. From the CEO. Max's coffee mug (Gerald IV, ceramic, concerned) seemed to lean away from the screen.
+
+The investigation started simply enough. "It's probably just a spam filter," Max thought, with the optimism of someone who hadn't yet discovered the horrors lurking in their DNS records. Five minutes later, Max was staring at an SPF record that looked like someone had tried to write a novel in DNS syntax:
+
+```
+v=spf1 include:spf.vendor1.com include:mail.vendor2.net include:esp.vendor3.com include:_spf.vendor4.io include:servers.vendor5.com include:mail.vendor6.org include:spf.vendor7.net ~all
+```
+
+"Gerald," Max whispered, "I think our SPF record has achieved consciousness."
+
+But that was just the appetizer. The MX record pointed to `mail.company.com`. Which didn't exist. Hadn't existed for three years, according to the git blame. The backup MX? `mx2.oldprovider.net`, which helpfully returned "550 No such domain" like a bouncer at a club that burned down in 2019.
+
+It was time for mxfckup—the tool Max built after the third "email apocalypse" that quarter. Think of it as a health checkup for your email, except instead of telling you to eat more vegetables, it tells you why half the internet thinks you're a spammer.
 
 Copy me:
 
@@ -109,4 +121,32 @@ Recommended:
 Notes: Metadata-only checks; no content or auth paths touched.
 ```
 
-Max’s ending was happy: one PTR added, one SPF diet (from seven includes to four), DMARC moved to quarantine with a calendar reminder, and a BIMI SVG that no longer looked like a witness protection photo. Email is 80% etiquette and 20% DNS. Fix the TXT spaghetti, point the vans to real buildings, and maybe—just maybe—your BIMI logo will stop looking like it was drawn in MS Paint by a raccoon.
+The mxfckup report was a masterpiece of controlled chaos:
+
+```
+CRITICAL: mx1.company.com - NXDOMAIN (your mail server is imaginary)
+WARNING: SPF include depth: 7 (RFC suggests you calm down)
+WARNING: SPF lookup count: 14/10 (you have exceeded the speed of light)
+FAILURE: DMARC policy: p=none; pct=0 (this does literally nothing)
+WARNING: No BIMI record (your brand has no face)
+INFO: PTR for 203.0.113.45: none (mail servers think you're sketchy)
+CRITICAL: mx2.oldprovider.net - connection refused (the backup is also dead)
+```
+
+Max spent the next four hours in DNS purgatory, but emerged victorious:
+
+1. **The MX Resurrection:** Pointed to actual, living mail servers that existed in this dimension
+2. **The SPF Diet:** Consolidated seven includes into three, like Marie Kondo for DNS records
+3. **The DMARC Awakening:** `p=quarantine` with actual enforcement, because actions have consequences
+4. **The PTR Redemption:** Reverse DNS that actually reversed, revolutionary concept
+5. **The BIMI Debut:** A logo that looked like a logo, not a ransom note
+
+By 6 PM, emails were flowing. The CEO's "THANK YOU!!!" (still too many exclamation marks, but positive ones now) arrived instantly. Max looked at Gerald IV with the satisfaction of someone who'd just defused a bomb made entirely of DNS records.
+
+"Gerald," Max said, "we've prevented the email apocalypse. Again."
+
+Gerald IV maintained ceramic silence, but it was a proud silence.
+
+The lesson? Email is like a Rube Goldberg machine designed by committee—it shouldn't work, but when it does, it's beautiful. And when it doesn't, you need mxfckup and a mug named Gerald.
+
+Your email configuration is probably broken right now. You just don't know it yet. Run mxfckup. Save yourself the CEO panic. Trust Gerald.

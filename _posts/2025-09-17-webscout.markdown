@@ -19,9 +19,19 @@ assetfinder -subs-only example.com \
 
 Use it: https://github.com/cybercdh/webscout
 
-Meet Marta Metadata. Marta once spent a whole evening right‑clicking “View Source” across 1,000 subdomains and woke up a slightly worse person. She promised herself she would never again play “guess the tech stack” by smell. She would float above the landscape like a considerate helicopter pilot, take notes politely, and land before the coffee went from “alive” to “artifact.” This is the spirit of webscout: in, out, signal only.
+Marta Metadata didn't start out angry. She started out optimistic, even cheerful, armed with a browser and the misguided belief that manually checking 1,000 subdomains was "totally doable before lunch." By subdomain 47, her wrist hurt. By 112, she'd forgotten what happiness felt like. By 500, she was having philosophical arguments with her monitor about the nature of suffering.
 
-On Wednesday, Marta’s brief was simple in the way that maps of spaghetti are simple: “Here are all our subdomains. Which ones are problems?” She needed the fast 80%—headers, favicon hash, mail policy, obvious CDN hints—without melting anything or accidentally role‑playing a DDoS.
+The breaking point came at subdomain 623: `dev-staging-test-backup-old.corp.example.com`. The server header proudly announced "IIS/6.0" like it was 2003 and nobody had told it otherwise. The favicon was a default Apache feather on an IIS server, which shouldn't be possible but somehow was. And the CSP? `default-src *`. Marta's eye twitched. Then the other one. Then both, creating a concerning strobe effect that alarmed her cat.
+
+"Never again," she told her coffee mug (Gerald Jr., porcelain, supportive). "There has to be a better way."
+
+There was. She called it webscout—aerial reconnaissance for the civilized. Think of it as a drone that flies over your infrastructure, takes photos, and lands before anyone notices. No touching, no downloading, just observation and mild judgment.
+
+The Wednesday that changed everything started with an innocent Slack message: "Hey Marta, can you check if any of our 10,000 subdomains have security issues? Thanks! 😊"
+
+Ten. Thousand. Subdomains.
+
+Marta looked at Gerald Jr. Gerald Jr., being ceramic, offered no solutions but excellent emotional stability.
 
 Copy me:
 
@@ -115,12 +125,21 @@ cat subs.txt \
  | jq -r '.[] | [.host, .http.status, (.headers.csp // ""), (.headers.strict_transport_security // "")] | @tsv'
 ```
 
-What did Marta actually find? Three buckets of joy:
-- A cluster of hosts missing HSTS entirely on HTTPS apex (quick win)
-- A “default-src *” CSP that might as well be a wink
-- A DMARC p=none on the apex that explained last week’s spoofing rumor
+By 4 PM, Marta had results that made her question reality:
 
-She didn’t need screenshots or heroics. Just flyovers and notes. And because we all love a neat handoff, here’s a report template your future self will actually reuse.
+**The Hall of Shame:**
+- 2,847 hosts with no CSP ("Come on in, XSS, make yourself at home")
+- 1,293 with `Server: Apache/2.2.3` (vintage, like finding a fax machine at a blockchain startup)  
+- 743 favicon hashes matching default installations (the digital equivalent of leaving the dealership sticker on your car)
+- One—just one—with `X-Powered-By: PHP/4.3.2` (Marta screenshot this twice to make sure she wasn't hallucinating)
+
+**The Mystery:**
+Five hundred subdomains all had the same favicon hash: 873269302. Marta recognized it immediately—CloudFlare's default. But the server headers said nginx. The CNAMEs pointed to AWS. Either someone was very confused, or Marta had discovered the world's most ambitious catfishing operation.
+
+**The Smoking Gun:**
+A DMARC record that simply said `v=DMARC1; p=none; pct=0`. Not even pretending to care. It was like finding a "Steal Me" sign on a Ferrari.
+
+She didn't need to touch anything. The metadata told the whole story, like footprints in snow leading directly to the crime scene. And because we all love a neat handoff, here's a report template your future self will actually reuse.
 
 Report snippet (defender/eng-friendly):
 
@@ -143,4 +162,12 @@ Recommendations:
 Notes: Metadata-only collection; no authenticated paths or brute forcing performed.
 ```
 
-`webscout` is about momentum. Collect the 80% that lets you decide “go deeper” vs “move on,” and do it with the bedside manner of a considerate house guest. Get your signals, write your notes, and land the helicopter before anyone notices the rotor wash.
+The real victory wasn't the vulnerabilities Marta found (though there were many). It wasn't even the praise from the CISO ("How did you check 10,000 hosts in an afternoon?"). It was the look on Gerald Jr.'s face—well, the lack of look, being ceramic—when she closed her laptop at 5 PM instead of midnight.
+
+"We did it," she told the mug. "We achieved reconnaissance without rage."
+
+Gerald Jr. said nothing, which Marta took as approval.
+
+webscout isn't just a tool. It's a philosophy: be fast, be polite, be gone before anyone notices. In the eternal war between thoroughness and sanity, sometimes you just need to fly over the battlefield, take notes, and live to scan another day.
+
+The internet is vast. Your time is finite. Your coffee mug believes in you.
