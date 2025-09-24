@@ -3,7 +3,7 @@ layout: post
 title: "Dina and the Department Store of Despair: A Tale of Too Many Open Doors"
 date: 2025-09-24 10:55:00 +0100
 categories: recon http buckets directories ioc
-permalink: /dirlstr/
+permalink: /dina-dirlstr/
 ---
 
 *Featuring a security analyst with boundary issues (the good kind), a server that couldn't keep a secret, and the world's most polite directory scanner.*
