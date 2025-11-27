@@ -7,7 +7,7 @@ permalink: /kitphishr/
 ---
 *Featuring open directories, forgotten credential dumps, and a security researcher with way too much disk space.*
 
-**TL;DR:** enumerate obviously open directories and pull exposed phishing kits for research/IOC extraction — do not access anything non-public.
+**TL;DR:** enumerate obviously open directories and pull exposed phishing kits for research/IOC extraction  -  do not access anything non-public.
 
 ```bash
 cat hosts.txt | kitphishr -c 30 -out loot | tee findings.csv

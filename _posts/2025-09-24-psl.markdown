@@ -8,7 +8,7 @@ permalink: /psl/
 
 *Featuring a security engineer who reads DNS specs for fun, boundaries that browsers respect (unlike humans), and the ghost of a marketing campaign that refuses to die.*
 
-**TL;DR:** The Public Suffix List isn't just for cookies—it's a treasure map to your dangling CNAMEs. Find them before someone else does.
+**TL;DR:** The Public Suffix List isn't just for cookies - it's a treasure map to your dangling CNAMEs. Find them before someone else does.
 
 ```bash
 # Pull Amazon-related PSL entries, then hunt CNAMEs ending in them
@@ -24,7 +24,7 @@ Her coffee mug (Gerald V, artisanal, slightly pretentious) witnessed the moment 
 
 Gerald V, being handcrafted pottery, offered no response but somehow conveyed deep skepticism.
 
-The Public Suffix List (PSL) is the internet's most underappreciated bouncer. It tells browsers things like: "You cannot set a cookie for all of .com, you absolute muppet" and "github.io is a boundary—everything before it belongs to users, not GitHub." This second fact is where things get spicy.
+The Public Suffix List (PSL) is the internet's most underappreciated bouncer. It tells browsers things like: "You cannot set a cookie for all of .com, you absolute muppet" and "github.io is a boundary - everything before it belongs to users, not GitHub." This second fact is where things get spicy.
 
 Poppy discovered that her company had 47 CNAMEs pointing to various platform-as-a-service providers. Normal, right? Except 12 of them pointed to resources that no longer existed. Like archaeological ruins, but instead of ancient pottery, it was `spring-sale-2019.herokuapp.com` still bravely CNAMEd from `deals.company.com`.
 
@@ -87,7 +87,7 @@ The investigation that followed was equal parts archaeology and horror movie. Po
 
 The beautiful (terrifying?) thing about the PSL is that it tells you exactly where the danger zones are. If `github.io` is a public suffix, then `anything-before-it.github.io` is user-controlled territory. Your CNAME is just a redirect sign. If the destination doesn't exist, anyone can build a new destination and your sign will happily point to it.
 
-Poppy didn't just find problems; she found *patterns*. Every abandoned marketing campaign, every "temporary" demo site, every proof-of-concept that became production-ish—they all left CNAMEs behind like breadcrumbs for future attackers.
+Poppy didn't just find problems; she found *patterns*. Every abandoned marketing campaign, every "temporary" demo site, every proof-of-concept that became production-ish - they all left CNAMEs behind like breadcrumbs for future attackers.
 
 Why PSL helps your mental model (and your tea schedule):
 
@@ -149,7 +149,7 @@ The last message to Gerald V, before closing the laptop: "We've drawn the bounda
 
 Gerald V maintained artistic silence, but it felt approving.
 
-The PSL isn't just a list—it's a map of the internet's property lines. Once you see them, you can't unsee them. You'll spot dangling CNAMEs like typos in a love letter. You'll understand why that cookie isn't working. You'll finally get why `something.github.io` and `github.io/something` live in completely different universes.
+The PSL isn't just a list - it's a map of the internet's property lines. Once you see them, you can't unsee them. You'll spot dangling CNAMEs like typos in a love letter. You'll understand why that cookie isn't working. You'll finally get why `something.github.io` and `github.io/something` live in completely different universes.
 
 Your CNAMEs are probably pointing to dead things right now. The PSL knows where they are. Poppy knows how to find them. Gerald V is judging you, ceramically.
 

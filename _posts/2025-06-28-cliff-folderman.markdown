@@ -16,7 +16,7 @@ mkdir -p vault/{cases,people,companies,addresses,templates,scripts,dashboards}
 echo "---\nstatus: Open\n---" > vault/cases/missing-hedge-fund-money.md
 ```
 
-**Prologue — The Man Who Loved Spreadsheets Too Much**
+**Prologue  -  The Man Who Loved Spreadsheets Too Much**
 
 Before we descend into this particular circle of markdown hell, you need to understand something about Cliff Folderman. He wasn't always a note-taking zealot who spoke in backlinks and dreamed in graph views. No, Cliff used to be normal. Well, as normal as a private investigator who specialized in financial fraud could be.
 
@@ -24,7 +24,7 @@ He had spreadsheets. Beautiful, color-coded Excel masterpieces with VLOOKUP form
 
 Then came the Butterworth case.
 
-**Chapter One — The PDF That Broke the Camel's Spine**
+**Chapter One  -  The PDF That Broke the Camel's Spine**
 
 The email arrived at 2:47 AM on a Tuesday. Subject line: "You're going to want to see this."
 
@@ -38,9 +38,9 @@ Cliff opened page one. His left eye twitched. By page 47, he'd consumed his body
 
 Gerald, being a lamp, offered no response. But the universe did.
 
-**Chapter Two — Enter Obsidian (Or: How I Learned to Stop Worrying and Love the Graph)**
+**Chapter Two  -  Enter Obsidian (Or: How I Learned to Stop Worrying and Love the Graph)**
 
-A friend—let's call him Marcus because that's his name and he owes me twenty bucks—suggested Obsidian. "It's just a markdown editor," Marcus said, dramatically understating things like he always does.
+A friend - let's call him Marcus because that's his name and he owes me twenty bucks - suggested Obsidian. "It's just a markdown editor," Marcus said, dramatically understating things like he always does.
 
 For the uninitiated, Obsidian is what happens when you feed a note-taking app steroids and teach it to juggle. At its core, it's deceptively simple:
 
@@ -83,9 +83,9 @@ Possibly both.
 (This is where the magic will happen)
 ```
 
-That bit between the `---` marks? That's YAML front matter, and it's about to become Cliff's best friend. Think of it as metadata on steroids—structured data that plugins can query, sort, and manipulate. But we're getting ahead of ourselves.
+That bit between the `---` marks? That's YAML front matter, and it's about to become Cliff's best friend. Think of it as metadata on steroids - structured data that plugins can query, sort, and manipulate. But we're getting ahead of ourselves.
 
-**Chapter Three — The Gary Butterworth Enigma**
+**Chapter Three  -  The Gary Butterworth Enigma**
 
 Gary Butterworth was not a simple man. His LinkedIn claimed he was a "Synergy Catalyst and Blockchain Evangelist," which Cliff translated as "probably commits fraud." His Companies House records showed 47 different companies, all registered to the same address: a fish and chips shop in Basingstoke that had been closed since 2019.
 
@@ -128,7 +128,7 @@ tags: [person]
 <!-- This will auto-populate from the linked_companies field -->
 ```
 
-But here's where it gets spicy. Cliff didn't want to just create a Gary note—he wanted it to automatically link back to the case. So he enhanced the template with some JavaScript magic:
+But here's where it gets spicy. Cliff didn't want to just create a Gary note - he wanted it to automatically link back to the case. So he enhanced the template with some JavaScript magic:
 
 ```javascript
 <%*
@@ -164,7 +164,7 @@ When Cliff created "Gary Butterworth" using this template, magic happened:
 
 The Graph View, previously showing a lonely single node, now displayed two connected dots. Cliff felt a dopamine hit usually reserved for solving crossword puzzles or finding money in old jacket pockets.
 
-**Chapter Four — The Shell Company Shuffle**
+**Chapter Four  -  The Shell Company Shuffle**
 
 This is where our story takes a turn toward the absurd. Gary Butterworth, it turned out, was less a person and more a one-man corporate registry. The man had more shell companies than a beach has actual shells.
 
@@ -319,11 +319,11 @@ When Cliff ran this template for "Ferret Fantastic Ventures" (company number: 12
 
 His Graph View now looked like a spider's web designed by someone with OCD and a passion for financial crime.
 
-**Chapter Five — The Ferret Connection**
+**Chapter Five  -  The Ferret Connection**
 
 Now, about those ferrets.
 
-It started innocently enough. One company—"Ferret Fantastic Ventures"—seemed like a quirky outlier. But as Cliff's Obsidian vault grew, a pattern emerged. Every third shell company had some connection to ferrets:
+It started innocently enough. One company - "Ferret Fantastic Ventures" - seemed like a quirky outlier. But as Cliff's Obsidian vault grew, a pattern emerged. Every third shell company had some connection to ferrets:
 - Import licenses for "exotic companion animals"
 - Warehouses zoned for "small mammal storage"
 - Invoices for industrial quantities of ferret food
@@ -350,7 +350,7 @@ Seven companies appeared. All incorporated within six months of each other. All 
 
 Gerald the lamp flickered, either in agreement or because it needed a new bulb.
 
-**Chapter Six — The Plot Thickens (Like Day-Old Coffee)**
+**Chapter Six  -  The Plot Thickens (Like Day-Old Coffee)**
 
 Cliff's Obsidian vault had grown from a single note to a sprawling investigation headquarters. The Graph View now resembled a small galaxy, with Gary Butterworth as its supermassive black hole, pulling all other notes into his orbit.
 
@@ -420,11 +420,11 @@ GROUP BY type
 
 The dashboard updated automatically as Cliff added notes. It was like having a crime board that organized itself, minus the red string and pushpins.
 
-**Chapter Seven — The Address Anomaly**
+**Chapter Seven  -  The Address Anomaly**
 
 Here's where things got weird. (Weirder than the ferret thing, if you can believe it.)
 
-Cliff noticed that multiple companies were registered to the same addresses. Not unusual in itself—plenty of companies use registered office services. But these weren't normal addresses:
+Cliff noticed that multiple companies were registered to the same addresses. Not unusual in itself - plenty of companies use registered office services. But these weren't normal addresses:
 
 1. **42 Schrodinger Lane** - A quantum mechanics research facility that claimed the building both did and didn't exist
 2. **The Old Ferret Sanctuary, Lower Buttsworth** - Abandoned since the Great Ferret Escape of 2019
@@ -471,9 +471,9 @@ But the real revelation came when Cliff mapped the addresses. Using the Obsidian
 
 Gerald remained noncommittal.
 
-**Chapter Eight — The Unraveling**
+**Chapter Eight  -  The Unraveling**
 
-Armed with his Obsidian vault—now containing 847 notes, 3,291 backlinks, and one increasingly sentient investigation—Cliff prepared for the final push.
+Armed with his Obsidian vault - now containing 847 notes, 3,291 backlinks, and one increasingly sentient investigation - Cliff prepared for the final push.
 
 He created a timeline using the Timelines plugin:
 
@@ -509,9 +509,9 @@ He created a timeline using the Timelines plugin:
 ]
 ```
 
-The pattern was clear. Gary wasn't just laundering money—he was building something. Something that required shell companies, suspicious addresses, and an ungodly number of ferrets.
+The pattern was clear. Gary wasn't just laundering money - he was building something. Something that required shell companies, suspicious addresses, and an ungodly number of ferrets.
 
-**Chapter Nine — The Reveal**
+**Chapter Nine  -  The Reveal**
 
 Cliff's phone rang at 3 AM. Unknown number.
 
@@ -531,7 +531,7 @@ There was a long pause. Then: "It's not what you think."
 
 An even longer pause. "Okay, it's exactly what you think."
 
-**Chapter Ten — The Resolution (Sort Of)**
+**Chapter Ten  -  The Resolution (Sort Of)**
 
 As it turned out, Gary Butterworth had indeed embezzled millions to fulfill his lifelong dream: Ferretopia, a ferret-themed wonderland where the small, slinky creatures would reign supreme. The shell companies were to hide the money trail. The pentagram of addresses was... actually, that was just a weird coincidence that even Gary couldn't explain.
 
@@ -539,7 +539,7 @@ As it turned out, Gary Butterworth had indeed embezzled millions to fulfill his 
 
 Cliff's Obsidian vault had cracked the case. Every connection, every company, every ferret-related invoice had led to this moment. He selected all his notes and exported them as a single PDF for the prosecution. It was 2,847 pages long. The circle was complete.
 
-**Epilogue — The Tools of the Trade**
+**Epilogue  -  The Tools of the Trade**
 
 Six months later, Cliff gave a talk at the International Conference of Overly Complicated Investigation Methods. His presentation: "How Obsidian Saved My Sanity (And Caught a Ferret-Obsessed Embezzler)."
 
@@ -568,7 +568,7 @@ The key takeaways:
 
 ### Final Thoughts
 
-"Information without structure is just noise," Cliff concluded his talk. "But with the right tools—with Obsidian—that noise becomes a symphony. A very weird symphony involving financial crime and ferrets, but a symphony nonetheless."
+"Information without structure is just noise," Cliff concluded his talk. "But with the right tools - with Obsidian - that noise becomes a symphony. A very weird symphony involving financial crime and ferrets, but a symphony nonetheless."
 
 Someone in the audience raised their hand. "What happened to the ferrets?"
 
@@ -647,12 +647,12 @@ Your-Investigation-Vault/
 - You might develop an unhealthy relationship with your graph view
 - You definitely won't be able to go back to linear note-taking
 
-But if you're investigating complex webs of information—be it financial fraud, research projects, or why your cat keeps stealing socks—Obsidian might just be the tool that saves your sanity.
+But if you're investigating complex webs of information - be it financial fraud, research projects, or why your cat keeps stealing socks - Obsidian might just be the tool that saves your sanity.
 
 Just ask Cliff. Or Gerald. Or the 10,000 ferrets currently enjoying their purpose-built paradise.
 
 > "Start with one note. End with enlightenment. Or madness. Usually both."  
-> — Cliff Folderman, June 2025
+>  -  Cliff Folderman, June 2025
 
 *P.S. - No ferrets were harmed in the making of this investigation. Several spreadsheets, however, were brutally murdered.*
 

@@ -17,7 +17,7 @@ Use it: https://github.com/cybercdh/pyspi
 
 The package was called `py-sqllite3`. Two Ls. One reality check. Nestled in a very serious project with badges and sponsors and everything. Normal adults report the typo and go to bed. I wrote a tool and then registered the typo so I could prove the point and then go to bed slightly smug.
 
-Meet Nate. Nate types fast, lints hard, and, once, typed an extra L. Builds are obedient golden retrievers: you throw a package name and they bring back whatever smells right first. If there’s a public package matching your private one—or a typo someone squats—your CI will install it with the innocence of a Disney protagonist.
+Meet Nate. Nate types fast, lints hard, and, once, typed an extra L. Builds are obedient golden retrievers: you throw a package name and they bring back whatever smells right first. If there’s a public package matching your private one - or a typo someone squats - your CI will install it with the innocence of a Disney protagonist.
 
 I built [pyspi][gh-pyspi] for this exact 2am gremlin energy: you hand it names, it asks PyPI if they exist, and then it tells you “nope” in a helpful tone.
 

@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "Marta and the Thousand Hosts: Recon Flyovers Without Wreckage"
-date: 2025-09-24 10:00:00 +0100
+date: 2025-09-20 10:00:00 +0100
 categories: recon webscout http dns osint
 permalink: /webscout/
 ---
@@ -25,7 +25,7 @@ The breaking point came at subdomain 623: `dev-staging-test-backup-old.corp.exam
 
 "Never again," she told her coffee mug (Gerald Jr., porcelain, supportive). "There has to be a better way."
 
-There was. She called it webscout—aerial reconnaissance for the civilized. Think of it as a drone that flies over your infrastructure, takes photos, and lands before anyone notices. No touching, no downloading, just observation and mild judgment.
+There was. She called it webscout - aerial reconnaissance for the civilized. Think of it as a drone that flies over your infrastructure, takes photos, and lands before anyone notices. No touching, no downloading, just observation and mild judgment.
 
 The Wednesday that changed everything started with an innocent Slack message: "Hey Marta, can you check if any of our 10,000 subdomains have security issues? Thanks! 😊"
 
@@ -107,12 +107,12 @@ Marta’s heuristics (worth their weight in pizza):
 
 - Security headers: if CSP is missing (or just “default-src *”), note it; if HSTS is absent on apex HTTPS, note it louder.
 - CDN hints: consistent CNAMEs to known edges, `server` headers like “cloudflare,” and telltale favicon hashes; triangulate, don’t assume.
-- Disclosure: X-Powered-By banners and verbose error pages are the cargo shorts of the web—comfortable, revealing, easily fixed.
+- Disclosure: X-Powered-By banners and verbose error pages are the cargo shorts of the web - comfortable, revealing, easily fixed.
 - Mail posture: DMARC p=reject/quarantine is civilized; p=none is a cry for help. SPF with a 14‑layer include-latte is a change control story waiting to happen.
 
 Manners so you get invited back:
 
-- Concurrency around 20–50 is the sweet spot for most programs; dial down on fragile infra.
+- Concurrency around 20 - 50 is the sweet spot for most programs; dial down on fragile infra.
 - Timeouts, backoff, and a per‑host cap (“one look, move on”) keep you fast and friendly.
 - Don’t screenshot logins or fetch authenticated paths; `webscout` is reconnaissance, not rummaging.
 
@@ -131,10 +131,10 @@ By 4 PM, Marta had results that made her question reality:
 - 2,847 hosts with no CSP ("Come on in, XSS, make yourself at home")
 - 1,293 with `Server: Apache/2.2.3` (vintage, like finding a fax machine at a blockchain startup)  
 - 743 favicon hashes matching default installations (the digital equivalent of leaving the dealership sticker on your car)
-- One—just one—with `X-Powered-By: PHP/4.3.2` (Marta screenshot this twice to make sure she wasn't hallucinating)
+- One - just one - with `X-Powered-By: PHP/4.3.2` (Marta screenshot this twice to make sure she wasn't hallucinating)
 
 **The Mystery:**
-Five hundred subdomains all had the same favicon hash: 873269302. Marta recognized it immediately—CloudFlare's default. But the server headers said nginx. The CNAMEs pointed to AWS. Either someone was very confused, or Marta had discovered the world's most ambitious catfishing operation.
+Five hundred subdomains all had the same favicon hash: 873269302. Marta recognized it immediately - CloudFlare's default. But the server headers said nginx. The CNAMEs pointed to AWS. Either someone was very confused, or Marta had discovered the world's most ambitious catfishing operation.
 
 **The Smoking Gun:**
 A DMARC record that simply said `v=DMARC1; p=none; pct=0`. Not even pretending to care. It was like finding a "Steal Me" sign on a Ferrari.
@@ -162,7 +162,7 @@ Recommendations:
 Notes: Metadata-only collection; no authenticated paths or brute forcing performed.
 ```
 
-The real victory wasn't the vulnerabilities Marta found (though there were many). It wasn't even the praise from the CISO ("How did you check 10,000 hosts in an afternoon?"). It was the look on Gerald Jr.'s face—well, the lack of look, being ceramic—when she closed her laptop at 5 PM instead of midnight.
+The real victory wasn't the vulnerabilities Marta found (though there were many). It wasn't even the praise from the CISO ("How did you check 10,000 hosts in an afternoon?"). It was the look on Gerald Jr.'s face - well, the lack of look, being ceramic - when she closed her laptop at 5 PM instead of midnight.
 
 "We did it," she told the mug. "We achieved reconnaissance without rage."
 

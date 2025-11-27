@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "Becky and the Haunted Bucket: Attributing S3 Without Touching a Single Object"
-date: 2025-09-24 10:40:00 +0100
+date: 2025-09-22 10:40:00 +0100
 categories: cloud s3 recon attribution buckets
 permalink: /s3accountfinder/
 ---
@@ -43,7 +43,7 @@ But Becky wanted more than vibes. She wanted an owner, because escalation withou
 
 “Account 111122223333,” S3AccountFinder whispered back. “Probably the marketing sandbox. The other three buckets? 999900001111.” A tale of two accounts. A tale of something that used to work and quietly didn’t anymore.
 
-Becky checked the CNAME next. `events.example.com` pointed into the website endpoint. The site was gone; the CNAME remained, nobly insisting that the party was still at Spring Savings 2019. It was not. And because `s3-website-eu-west-1.amazonaws.com` is a public suffix boundary, the label before it—`spring-savings-2019`—was available for anyone with a credit card and a mischievous grin.
+Becky checked the CNAME next. `events.example.com` pointed into the website endpoint. The site was gone; the CNAME remained, nobly insisting that the party was still at Spring Savings 2019. It was not. And because `s3-website-eu-west-1.amazonaws.com` is a public suffix boundary, the label before it - `spring-savings-2019` - was available for anyone with a credit card and a mischievous grin.
 
 She verified the “NoSuchBucket” once more, like a burglar who only checks that the door is locked, then wrote a note that would make an SRE weep with relief.
 
@@ -71,7 +71,7 @@ Becky’s report went out after lunch. The reply arrived before the kettle boile
 
 “They can,” Becky said, in the gentle tone you use with people and also with DNS. “But you’re fixing it now, so they won’t.”
 
-The fix was simple: remove the CNAME, or recreate the bucket in the right account, or move behind CloudFront with a proper origin and an Origin Access Control. The kindness was attribution. The bonus points were a list of other stale references Becky found along the way—because old campaigns never die, they just change URLs.
+The fix was simple: remove the CNAME, or recreate the bucket in the right account, or move behind CloudFront with a proper origin and an Origin Access Control. The kindness was attribution. The bonus points were a list of other stale references Becky found along the way - because old campaigns never die, they just change URLs.
 
 Lessons, muttered like a mantra while the tea steeps:
 

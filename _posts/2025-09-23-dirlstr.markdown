@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "Dina and the Department Store of Despair: A Tale of Too Many Open Doors"
-date: 2025-09-24 10:55:00 +0100
+date: 2025-09-23 10:55:00 +0100
 categories: recon http buckets directories ioc
 permalink: /dina-dirlstr/
 ---
@@ -16,7 +16,7 @@ cat urls.txt | dirlstr -c 40 | tee open-dirs.txt
 
 Use it: https://github.com/cybercdh/dirlstr
 
-Meet Dina Directory, senior security analyst at Corporate Corp and three-time winner of "Most Likely to Return Your Pen." Dina had principles: never read private files, always knock first, and absolutely never—*never*—download that 4GB database backup just to prove a point. Her coffee mug (Gerald III, ceramic, judgmental) bore witness to her latest crusade: finding every open directory listing before the hackers did.
+Meet Dina Directory, senior security analyst at Corporate Corp and three-time winner of "Most Likely to Return Your Pen." Dina had principles: never read private files, always knock first, and absolutely never - *never* - download that 4GB database backup just to prove a point. Her coffee mug (Gerald III, ceramic, judgmental) bore witness to her latest crusade: finding every open directory listing before the hackers did.
 
 It started innocently. Tuesday, 3 PM, routine asset review. Dina was clicking through subdomains like a pianist warming up when she hit `staging.corporate-corp.com/uploads/`. Instead of a 403 Forbidden or a login page, Apache greeted her with its most honest face: "Index of /uploads" followed by a parade of files marching down the page like ants at a picnic.
 
@@ -24,9 +24,9 @@ It started innocently. Tuesday, 3 PM, routine asset review. Dina was clicking th
 
 The situation was 47 subdomains, each potentially hosting its own digital yard sale. Dina could check them manually, but she'd already done that dance last month and her carpal tunnel was unionizing. Time for automation, but with *manners*.
 
-dirlstr was born from this exact frustration—the tool that finds open doors but doesn't rifle through the medicine cabinet. Think of it as a metal detector for directory listings: it beeps, you investigate, nobody gets arrested.
+dirlstr was born from this exact frustration - the tool that finds open doors but doesn't rifle through the medicine cabinet. Think of it as a metal detector for directory listings: it beeps, you investigate, nobody gets arrested.
 
-The tool's philosophy matched Dina's perfectly: observe, don't interact. Like a nature documentarian filming lions—you can see them eating the gazelle, but you don't join the feast.
+The tool's philosophy matched Dina's perfectly: observe, don't interact. Like a nature documentarian filming lions - you can see them eating the gazelle, but you don't join the feast.
 
 Here's how Dina's Tuesday became legendary:
 
@@ -89,7 +89,7 @@ Dina
 P.S. - Please check /uploads/ first. Trust me on this one.
 ```
 
-The response came in 12 minutes—a company record. The CISO's reply was just: "Oh god. Fixing now. Thank you. How did we not know about this?"
+The response came in 12 minutes - a company record. The CISO's reply was just: "Oh god. Fixing now. Thank you. How did we not know about this?"
 
 Dina looked at Gerald. Gerald, being ceramic, offered no answers but excellent moral support.
 
@@ -97,7 +97,7 @@ By Friday, every directory listing was locked down. IT implemented a new policy:
 
 The lessons Dina carved into her notebook (and you should too):
 
-1. **Reconnaissance is not intrusion.** Looking at what's publicly displayed isn't breaking in—it's quality assurance with commitment issues.
+1. **Reconnaissance is not intrusion.** Looking at what's publicly displayed isn't breaking in - it's quality assurance with commitment issues.
 2. **Document everything, download nothing.** Your evidence should fit in an email, not a data center.
 3. **Automate with ethics.** Your tools should be as polite as you'd be in person.
 4. **Report fast, fix faster.** Every hour an open directory exists is an hour someone less polite might find it.
@@ -110,7 +110,7 @@ echo "https://target.com/uploads/" | dirlstr -v
 
 If it returns results, you've got work to do. If it doesn't, try more paths. If Gerald starts talking back, you've been at this too long.
 
-The real magic isn't finding the vulnerabilities—it's finding them first, reporting them properly, and sleeping soundly knowing you've made the internet slightly less terrible. Dina does this every Tuesday. Gerald approves, silently, as good mugs do.
+The real magic isn't finding the vulnerabilities - it's finding them first, reporting them properly, and sleeping soundly knowing you've made the internet slightly less terrible. Dina does this every Tuesday. Gerald approves, silently, as good mugs do.
 
 Report template for the prepared:
 

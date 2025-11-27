@@ -4,3 +4,8 @@ _site
 .jekyll-metadata
 .DS_Store
 vendor
+# Drafts and local backups
+_drafts/
+*.bak
+*.bak2
+*.pre

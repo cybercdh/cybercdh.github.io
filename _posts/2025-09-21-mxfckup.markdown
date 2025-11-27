@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "Max and the Great Email Extinction Event: How One Person Saved Christmas (in July)"
-date: 2025-09-24 10:20:00 +0100
+date: 2025-09-21 10:20:00 +0100
 categories: email dns mx spf dmarc bimi recon
 permalink: /mxfckup/
 ---
@@ -32,7 +32,7 @@ v=spf1 include:spf.vendor1.com include:mail.vendor2.net include:esp.vendor3.com 
 
 But that was just the appetizer. The MX record pointed to `mail.company.com`. Which didn't exist. Hadn't existed for three years, according to the git blame. The backup MX? `mx2.oldprovider.net`, which helpfully returned "550 No such domain" like a bouncer at a club that burned down in 2019.
 
-It was time for mxfckup—the tool Max built after the third "email apocalypse" that quarter. Think of it as a health checkup for your email, except instead of telling you to eat more vegetables, it tells you why half the internet thinks you're a spammer.
+It was time for mxfckup - the tool Max built after the third "email apocalypse" that quarter. Think of it as a health checkup for your email, except instead of telling you to eat more vegetables, it tells you why half the internet thinks you're a spammer.
 
 Copy me:
 
@@ -147,6 +147,6 @@ By 6 PM, emails were flowing. The CEO's "THANK YOU!!!" (still too many exclamati
 
 Gerald IV maintained ceramic silence, but it was a proud silence.
 
-The lesson? Email is like a Rube Goldberg machine designed by committee—it shouldn't work, but when it does, it's beautiful. And when it doesn't, you need mxfckup and a mug named Gerald.
+The lesson? Email is like a Rube Goldberg machine designed by committee - it shouldn't work, but when it does, it's beautiful. And when it doesn't, you need mxfckup and a mug named Gerald.
 
 Your email configuration is probably broken right now. You just don't know it yet. Run mxfckup. Save yourself the CEO panic. Trust Gerald.
