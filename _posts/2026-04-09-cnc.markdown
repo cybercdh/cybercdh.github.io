@@ -1,0 +1,167 @@
+---
+layout: post
+title: "Colin and the Config File That Ate His Afternoon: A Story About Silence"
+date: 2026-04-09 17:00:00 +0100
+categories: tools unix config productivity
+permalink: /cnc/
+---
+
+*Featuring: a sysadmin with a scrolling problem, 847 lines of commented-out history, and the quiet dignity of a tool that just shows you what's actually on.*
+
+**TL;DR:** `cnc` (cat no comments) strips comments and blank lines from config files so you can see what's actually configured without wading through the archaeology.
+
+```bash
+cnc /etc/ssh/sshd_config
+```
+
+Use it: https://github.com/cybercdh/cnc
+
+---
+
+Colin Configsworth had a problem. Not a dramatic problem - no ransomware, no breach, no CEO screaming in all-caps. Just a quiet, grinding, soul-eroding problem that had been accumulating for years like sediment at the bottom of a mug.
+
+The mug in question was Gerald VI. Ceramic. Slightly chipped on the handle from the incident with the standing desk. Gerald VI had witnessed a lot of things, but nothing quite as bleak as what was happening right now: Colin, at 3pm on a Wednesday, scrolling through `/etc/nginx/nginx.conf` for the fourteenth time that month, trying to remember which `server_name` directive was actually active and which ones were commented out from 2019 when someone had "temporarily" disabled the staging config.
+
+"Gerald," Colin said, "I have read the word 'upstream' forty-seven times and I still don't know what's running."
+
+Gerald VI, being a mug, said nothing. But the silence felt pointed.
+
+The file was 600 lines long. Of those, roughly 200 were actual configuration. The other 400 were comments. Not useful comments - not "this setting prevents the server from catching fire" or "change this before production." No, these were the archaeological kind. The kind that accumulate when a config file gets passed between sysadmins like a baton in a relay race where nobody knows where the finish line is.
+
+There were comments explaining what `worker_processes` does, as if the person reading the file had never encountered nginx before. There were commented-out blocks from a migration in 2021 that never quite finished. There was a section that just said `# TODO: ask Dave` and Dave had left the company in 2022. There was, inexplicably, a haiku.
+
+Colin had tried `grep -v '^#'`. It helped, a bit, in the same way that bailing out a sinking boat with a teaspoon helps a bit. It missed indented comments. It left blank lines everywhere. It didn't touch `//` or `;` or `--`. It was, in short, a partial solution to a problem that deserved a complete one.
+
+He'd tried `sed`. He'd tried `awk`. He'd tried a Python one-liner that he'd found on Stack Overflow and immediately lost trust in when it ate a heredoc.
+
+And then, one evening, in the same spirit of mild desperation that produces most useful tools, he wrote `cnc`.
+
+---
+
+The name is exactly what it says: cat, no comments. It's written in C, it's fast, and it does one thing with the kind of focused competence that makes you slightly embarrassed you didn't write it sooner.
+
+```bash
+# The before
+$ wc -l /etc/ssh/sshd_config
+145 /etc/ssh/sshd_config
+
+# The after
+$ cnc /etc/ssh/sshd_config | wc -l
+12
+```
+
+Twelve lines. That's what's actually configured. The other 133 are the manual, the history, the suggestions, the warnings, the commented-out `Port 2222` that someone added "just in case" in 2018 and never removed. `cnc` doesn't care about any of that. `cnc` shows you the truth.
+
+Install it:
+
+```bash
+git clone https://github.com/cybercdh/cnc.git
+cd cnc
+make
+sudo make install
+```
+
+Or without sudo if you're the cautious type:
+
+```bash
+make install PREFIX=~/.local
+```
+
+---
+
+The flags are minimal because the tool is minimal. That's the point.
+
+```bash
+# Strip comments and blank lines (default)
+cnc /etc/nginx/nginx.conf
+
+# Keep blank lines if you want the breathing room
+cnc -b /etc/nginx/nginx.conf
+
+# Also strip inline comments (the ones after actual code)
+cnc -i script.sh
+
+# Only care about # comments and want maximum speed
+cnc -s /etc/fstab
+
+# Custom comment character for something unusual
+cnc -c ';' config.ini
+
+# Works in pipelines too
+cat sshd_config | cnc -i -
+```
+
+The `-i` flag is the one Colin uses most. It handles the passive-aggressive inline comment - the `PasswordAuthentication no  # Disable password auth` style, where someone felt the need to explain what `no` means. With `-i`, that becomes just `PasswordAuthentication no`. Clean. Honest. Unambiguous.
+
+By default, `cnc` handles `#`, `//`, `;`, and `--` - which covers shell, Python, C, Java, Go, Rust, SQL, Lua, INI files, and most things you're likely to encounter on a Tuesday afternoon when you just want to know what's actually switched on.
+
+---
+
+Colin's first real test was the nginx config. He ran `cnc /etc/nginx/nginx.conf` and stared at the output for a moment.
+
+"Gerald," he said, "it's beautiful."
+
+It was 47 lines. The actual configuration. No haiku. No Dave. No 2021 migration archaeology. Just the directives that were doing things, arranged in the order they appeared, stripped of everything that wasn't load-bearing.
+
+He found three things he didn't know were there. One was a `proxy_pass` pointing to a service that had been decommissioned six months ago. One was a `client_max_body_size` set to 1MB, which explained a complaint that had been sitting in the backlog since February. The third was a `server_name` for a domain that the company no longer owned.
+
+None of these were hidden. They were all right there in the file. They were just buried under 400 lines of commentary that his eyes had learned to skip.
+
+This is the thing about comments in config files: they're not documentation. They're sediment. They accumulate over time, layer by layer, each one added with good intentions and left behind when those intentions moved on. The actual configuration - the thing that's running, right now, on your server - is somewhere in there, but finding it requires the kind of focused attention that's hard to sustain when you're on your third coffee and the Slack notifications are piling up.
+
+`cnc` doesn't fix the underlying problem. It doesn't stop people from leaving comments in config files, and it doesn't bring Dave back. But it gives you a clean view of what's actually happening, which turns out to be most of what you need.
+
+---
+
+The diff use case is the one that surprised Colin most. He'd been comparing configs between environments by opening both files and scrolling, which is the kind of workflow that makes you question your life choices. With `cnc`, it became:
+
+```bash
+diff <(cnc /etc/nginx/nginx.conf) <(cnc /etc/nginx/nginx.conf.staging)
+```
+
+Suddenly the diff was about actual differences, not about which environment had more comments explaining what `keepalive_timeout` does. The signal-to-noise ratio went from "archaeological dig" to "useful information."
+
+He started using it in scripts:
+
+```bash
+# Check what's actually enabled in sshd before a change
+cnc /etc/ssh/sshd_config > before.txt
+# make change
+cnc /etc/ssh/sshd_config > after.txt
+diff before.txt after.txt
+```
+
+He started piping things through it:
+
+```bash
+# Find all active server_name directives across all nginx configs
+find /etc/nginx -name '*.conf' | xargs -I{} cnc {} | grep server_name
+```
+
+He started recommending it to colleagues with the slightly evangelical energy of someone who has found a thing that works and cannot understand why everyone isn't already using it.
+
+Gerald VI observed all of this with the quiet approval of a mug that has seen its owner finally solve a problem that should have been solved years ago.
+
+---
+
+There's a version of this story where `cnc` is a small thing. A convenience. A nice-to-have. And in one sense it is - you can absolutely live without it, in the same way you can absolutely read a 600-line config file and find the 47 lines that matter.
+
+But the small things are where the time goes. The scrolling, the squinting, the "wait, is this commented out or not" moments - they're each individually trivial and collectively exhausting. `cnc` is the kind of tool that doesn't feel significant until you've been using it for a week and you realise you haven't had that particular low-grade frustration in a while.
+
+Colin's nginx config is now documented separately, in a place where documentation belongs. The config file itself is just configuration. When he opens it, he sees what's running. When he runs `cnc` on it, he sees the same thing, faster, without the blank lines.
+
+Dave's TODO is gone. The haiku is gone. The 2021 migration archaeology is gone. What remains is the truth of the file: what it does, right now, today.
+
+"Gerald," Colin said, on a Wednesday afternoon that was going considerably better than the last one, "I think we're going to be okay."
+
+Gerald VI, chipped handle and all, said nothing.
+
+But it felt like agreement.
+
+---
+
+Your config files are full of comments right now. Some of them are useful. Most of them are sediment. `cnc` shows you which is which - or rather, it shows you what's left when you take the sediment away.
+
+Go look. You might find a `proxy_pass` pointing at something that doesn't exist anymore.
+
+You probably will, actually.
