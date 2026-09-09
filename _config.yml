@@ -10,6 +10,7 @@ github_username:  cybercdh
 theme: minima
 plugins:
   - jekyll-feed
+  - jekyll-sitemap
 
 google_analytics: G-JHQ35THLPX
 
