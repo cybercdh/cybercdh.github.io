@@ -1,25 +1,14 @@
 ---
 permalink: /404.html
 layout: page
+title: "404"
 ---
 
-<style type="text/css" media="screen">
-  .container {
-    margin: 10px auto;
-    max-width: 600px;
-    text-align: center;
-  }
-  h1 {
-    margin: 30px 0;
-    font-size: 4em;
-    line-height: 1;
-    letter-spacing: -1px;
-  }
-</style>
+<p class="post__meta"><span class="post__sigil">$</span> cat /dev/null</p>
 
-<div class="container">
-  <h1>404</h1>
+<p><strong>Segfault.</strong> The page you asked for is not here. It may have moved, been renamed, or never existed outside your imagination.</p>
 
-  <p><strong>Page not found :(</strong></p>
-  <p>The requested page could not be found.</p>
-</div>
+<p>Try heading <a href="/">home</a> and looking through the posts, or check the <a href="/about/">about</a> page.</p>
+
+<pre><code>colin@bot:~$ find / -name "that-page" 2>/dev/null
+colin@bot:~$ # nothing. 404.</code></pre>

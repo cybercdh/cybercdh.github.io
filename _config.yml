@@ -7,10 +7,10 @@ baseurl: ""
 url: "https://colin.bot"
 github_username:  cybercdh
 
-theme: minima
 plugins:
   - jekyll-feed
   - jekyll-sitemap
+  - jekyll-seo-tag
 
 google_analytics: G-JHQ35THLPX
 

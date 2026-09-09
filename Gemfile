@@ -8,8 +8,10 @@ source "https://rubygems.org"
 # This will help ensure the proper Jekyll version is running.
 # Happy Jekylling!
 gem "jekyll", "~> 4.4.1"
-# This is the default theme for new Jekyll sites. You may change this to anything you like.
-gem "minima", "~> 2.5"
+# The site uses its own layouts and CSS (a custom terminal theme), so no
+# theme gem is needed. jekyll-seo-tag (previously pulled in via minima) is
+# now an explicit dependency.
+gem "jekyll-seo-tag", "~> 2.8"
 # If you want to use GitHub Pages, remove the "gem "jekyll"" above and
 # uncomment the line below. To upgrade, run `bundle update github-pages`.
 # gem "github-pages", group: :jekyll_plugins

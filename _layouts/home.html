@@ -1,0 +1,28 @@
+---
+layout: default
+---
+<div class="listing">
+  <p class="listing__cmd"><span class="listing__sigil">colin@bot:~$</span> ls -lt ~/posts</p>
+
+  {%- if page.content and page.content != '' -%}
+  <div class="listing__intro">{{ content }}</div>
+  {%- endif -%}
+
+  <ul class="posts">
+    {%- for post in site.posts -%}
+    <li class="posts__item">
+      <a class="posts__link" href="{{ post.url | relative_url }}">
+        <time class="posts__date" datetime="{{ post.date | date_to_xmlschema }}">{{ post.date | date: "%Y-%m-%d" }}</time>
+        <span class="posts__title">{{ post.title | escape }}</span>
+      </a>
+      {%- if post.categories.size > 0 -%}
+      <span class="posts__tags">
+        {%- for cat in post.categories limit: 3 -%}<span class="tag">{{ cat }}</span>{%- endfor -%}
+      </span>
+      {%- endif -%}
+    </li>
+    {%- endfor -%}
+  </ul>
+
+  <p class="listing__foot">{{ site.posts.size }} post{% if site.posts.size != 1 %}s{% endif %} &middot; <a href="{{ '/feed.xml' | relative_url }}">subscribe via rss</a></p>
+</div>

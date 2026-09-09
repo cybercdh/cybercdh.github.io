@@ -1,0 +1,24 @@
+---
+layout: default
+---
+<article class="post">
+  <header class="post__header">
+    <h1 class="post__title">{{ page.title | escape }}</h1>
+    <p class="post__meta">
+      <span class="post__sigil">$</span>
+      <time datetime="{{ page.date | date_to_xmlschema }}">{{ page.date | date: "%b %-d, %Y" }}</time>
+      &middot; {{ content | number_of_words | divided_by: 200 | plus: 1 }} min read
+      {%- if page.categories.size > 0 %} &middot;
+      {%- for cat in page.categories %} <span class="tag">{{ cat }}</span>{% endfor -%}
+      {%- endif %}
+    </p>
+  </header>
+
+  <div class="post__body">
+    {{ content }}
+  </div>
+
+  <footer class="post__footer">
+    <a class="post__back" href="{{ '/' | relative_url }}">cd ..</a>
+  </footer>
+</article>
