@@ -1,0 +1,81 @@
+---
+layout: post
+title: "Colin and the Two Year Plateau: A Bedtime Story About Reading Your Own Data"
+date: 2026-09-09 09:00:00 +0100
+categories: tools mcp ai rowing data concept2
+permalink: /ergmcp/
+---
+
+*Featuring: a rower with a stubborn PB, a heart rate that lied by omission, and an AI that read the logbook nobody else did.*
+
+**TL;DR:** I connected Claude to my Concept2 logbook so it could read every split, interval and stroke I've ever pulled. Within minutes it found the hole in two years of training. It now plans my week into my calendar and re-plans every Sunday based on what I actually did.
+
+```bash
+# Ask it anything about your own rowing
+"what's my 2k PB, and why hasn't it moved in a year?"
+```
+
+Use it: [https://github.com/cybercdh/ergmcp](https://github.com/cybercdh/ergmcp)
+
+---
+
+Colin Coxswain had a number, and the number would not move.
+
+7:25.5. Two thousand metres. Set in March of last year, on a good day, on a machine that owed him nothing. Since then he had rowed hundreds of times. He had gotten demonstrably fitter. His 500 metre time kept dropping. His interval sessions looked, frankly, heroic. And the 2k sat there like Gerald VI on the desk, ceramic and immovable, radiating quiet judgement.
+
+Gerald VI, being a mug, said nothing. But the silence had a rowing-specific quality to it now.
+
+"I don't understand," Colin said, scrolling ErgData for the ninth time that week. "I did four by five hundred at one forty-seven on Tuesday. One forty-seven! That's PB pace minus four seconds. Why can't I hold one fifty-one for a single continuous piece?"
+
+The mug offered no response, but somehow conveyed that the answer was already in the data and Colin simply wasn't reading it properly.
+
+Here is the thing about the Concept2 logbook. It knows everything. Every split, every interval, every stroke, every heart rate reading from every session you have ever done. The ErgData app dutifully syncs all of it. And almost nobody ever looks past the summary line, the one that says *2000m, 7:38, 1:54 average* and calls it a day. The summary line is a headline. The story is underneath it, and the story is where the truth hides.
+
+So Colin did the thing that Colin does when a problem refuses to explain itself. He built a small tool.
+
+---
+
+`ergmcp` is a bridge. On one side is the Concept2 logbook API, the same data behind ErgData. On the other side is Claude, the AI, which can now read that data as tools rather than as a wall of numbers. Not the summary lines. Everything. Ask it about a workout and it pulls the interval breakdown, the per-stroke pacing, the heart rate drift, the lot.
+
+The setup is a personal access token from your logbook profile and a couple of commands. The tool does the rest.
+
+```bash
+git clone https://github.com/cybercdh/ergmcp.git
+# generate a token in your Concept2 logbook, export it, register the server
+```
+
+Then you open Claude and ask it something you thought you already knew the answer to.
+
+---
+
+The first thing it did was dismantle Colin's self-image, politely, with evidence.
+
+Those broken 2ks he was so proud of? It read the intervals and pointed out that they were four by five hundred metres with more than three minutes of rest between each rep. That is not a 2k. That is a speed session wearing a 2k costume. The rest was doing the hard work, not Colin.
+
+Then it looked at his easy days. His steady twenty minute pieces, the ones that were meant to be gentle aerobic base, were averaging a heart rate in the low 170s. For context, his maximum is 180. His easy days were not easy. They were threshold sessions in a cardigan, sitting in the exact grey zone that builds neither top end speed nor genuine aerobic base.
+
+And there it was. Two years of rowing along to videos had given Colin a magnificent anaerobic engine and almost no aerobic one. His body could produce PB pace in short bursts all day long, and had nothing underneath to sustain it for seven and a half minutes. The 2k is roughly three quarters aerobic. He had been training the other quarter, over and over, and wondering why the wall never moved.
+
+None of this was hidden. It was all sitting in his own logbook, in plain sight, in the layer beneath the headline. He had simply never read it that way. The AI did, because reading data properly is the one thing it will never get bored of doing.
+
+"Gerald," Colin said quietly, "I've been doing sprints and calling it endurance."
+
+The mug said nothing, but it was the good kind of nothing now.
+
+---
+
+The dismantling was the start, not the point. The point is what came next.
+
+The tool now plans Colin's training week around his actual life, which is three rows between a gym session, a pool swim, and the general chaos of having a family. It writes each session straight into his Google Calendar with the full prescription in the description, target pace, rest, stroke rate and heart rate caps, so there is nothing to remember at the machine. Every Sunday evening a scheduled agent reviews what he actually did that week, compares it against what was planned, and writes the next week accordingly. Nail the sessions and it advances the progression. Miss them or fade mid-rep and it quietly repeats the step rather than marching him off a cliff.
+
+After his first properly easy row this week, the kind that felt insultingly slow, it checked the splits and the heart rate drift and confirmed he had finally done it correctly. Thirty-two beats per minute lower than the old "easy" days, for seven seconds per 500 slower. The first brick of an actual base.
+
+It is, in short, a coach who has genuinely read your logbook. Because it has. All of it.
+
+---
+
+If you row, and you have a number that will not move, the odds are decent that the reason is already sitting in your logbook waiting to be read. `ergmcp` is free and open source. There is a full guide in the repo that walks through the whole setup, including the automatic weekly planning. You will need Claude and about half an hour, and a small tolerance for a terminal.
+
+Use it: [https://github.com/cybercdh/ergmcp](https://github.com/cybercdh/ergmcp)
+
+The test is in November. If the robot is wrong, I will be back here to say so. If it is right, I owe a mug an apology.

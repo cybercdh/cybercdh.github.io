@@ -9,6 +9,8 @@ I've spent the last decade neck-deep in malware, digital forensics, threat intel
 
 In my spare time, I pretend to be a competitive open water swimmer - because apparently, spending all day drowning in logs and packet captures isn't wet enough. There's something calming about swimming in freezing, bottomless lakes while reflecting on whether that DNS anomaly you saw earlier was a typo or the beginning of a breach.
 
+When I'm not in a lake, I'm on a rowing machine chasing a 2k PB that has ignored me for over a year. So naturally I did the reasonable thing and gave an AI full access to my erg data, at which point it found the hole in two years of my training in about the time it takes to warm up. That turned into a pair of tools and [a story about reading your own data][ergmcp].
+
 On this blog, I write about:
 
 * [DNS disasters featuring Derek and his thousand traces][tracr]
@@ -20,6 +22,7 @@ On this blog, I write about:
 * [Domain takeovers (formerly Dave's)][nsfckup]
 * [Phishing kits and Mr. Phisherton's mistakes][kitphishr]
 * [Dependency confusion love stories][pyspi]
+* [Teaching an AI to coach my rowing from my own logbook][ergmcp]
 * Bug bounty hunts (for fame, fortune, and the occasional duplicate)
 * Swimming stupidly long distances for fun and existential clarity
 * Security war stories featuring ceramic mugs named Gerald
@@ -35,12 +38,17 @@ My tools solve real problems with questionable naming conventions:
 * **[kitphishr](https://github.com/cybercdh/kitphishr)** - Extracts phishing kit metadata
 * **[nsfckup](https://github.com/cybercdh/nsfckup)** - Identifies NS record vulnerabilities
 
+And a couple that have nothing to do with security and everything to do with going faster:
+* **[ergmcp](https://github.com/cybercdh/ergmcp)** - Gives an AI your Concept2 logbook so it can actually coach you
+* **[garminmcp](https://github.com/cybercdh/garminmcp)** - Does the same for your Garmin watch, sleep, HRV and all
+
 I live in the UK, which is great for people who enjoy grey skies, overpriced pastries, and constant inner turmoil over whether to buy a mechanical keyboard you absolutely don't need.
 
 ## Contact
-I'm on [X][twitter] and I use email - `cybercdh at gmail dot com`. Happy to chat about security, weird bugs, or your DNS regrets.
+Find me on [GitHub][github], or use email - `cybercdh at gmail dot com`. Happy to chat about security, weird bugs, your DNS regrets, or how to make a rowing machine hurt less.
 
-[twitter]: https://x.com/cybercdh
+[github]: https://github.com/cybercdh
+[ergmcp]: /ergmcp/
 [tracr]: /tracr/
 [dirlstr]: /dina-dirlstr/
 [mxfckup]: /mxfckup/

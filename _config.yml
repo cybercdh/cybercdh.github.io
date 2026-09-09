@@ -5,7 +5,6 @@ description: >-
 
 baseurl: "" 
 url: "https://colin.bot"
-twitter_username: cybercdh
 github_username:  cybercdh
 
 theme: minima
