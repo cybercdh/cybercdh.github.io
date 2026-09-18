@@ -45,7 +45,7 @@ Priya loved these stories the way other people love ghost stories, which is to s
 
 Then came the hyphen.
 
-Everything a computer holds is numbers, and every character is a number in a coat. The humble hyphen, `-`, is ASCII 45, which in binary is:
+Everything a computer holds is numbers, and every character is a number in a coat. The humble hyphen, `-`, is ASCII 45, or `0x2D` in hex. Its neighbour the forward slash, `/`, is ASCII 47, or `0x2F`. Two apart in the character table, which sounds like a comfortable distance right up until you write both bytes out in binary and line them up.
 
 ```
 -   0x2D   0 0 1 0 1 1 0 1
@@ -60,7 +60,7 @@ Because in S3, when you address a bucket the old path-style way, the URL looks l
 
 ```
 https://s3.amazonaws.com/really-popular-bucket-123456789/some/object.json
-                         └────── bucket ──────┘ └── key ──┘
+                         └────────── bucket ───────────┘ └──── key ─────┘
 ```
 
 The first slash after the host is the border between the bucket's name and the object's key. It is the wall. And Priya had just realised that the wall and the hyphen were one bit apart.
