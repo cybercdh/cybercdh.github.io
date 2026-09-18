@@ -6,9 +6,9 @@ categories: cloud s3 aws bitflip cosmic-rays theory
 permalink: /bitflippr/
 ---
 
-*Featuring: a particle from a dying star, a hyphen with ambitions, one coffee mug of prior renown, and a heist that only works while you're asleep.*
+*Featuring a particle from a dying star, a hyphen with ambitions, one coffee mug of prior renown, and a heist that only works while you're asleep.*
 
-**TL;DR:** a hyphen and a forward slash are one bit apart in binary. In S3, a forward slash is the wall between a bucket and a key. So flip a single bit in the right spot and the one bucket named `really-popular-bucket-123456789` quietly becomes `really-popular-bucket/123456789`. S3 no longer reads that as one name. It reads a bucket called `really-popular-bucket` holding a key called `123456789`. Register that shorter bucket, switch on logging, and wait for the sky to mail you someone else's traffic. It is beautiful. It almost works. Here's why the universe says no, and what to do with the idea instead.
+**TL;DR.** A hyphen and a forward slash are one bit apart in binary. In S3, a forward slash is the wall between a bucket and a key. So flip a single bit in the right spot and the one bucket named `really-popular-bucket-123456789` quietly becomes `really-popular-bucket/123456789`. S3 no longer reads that as one name. It reads a bucket called `really-popular-bucket` holding a key called `123456789`. Register that shorter bucket, switch on logging, and wait for the sky to mail you someone else's traffic. It is beautiful. It almost works. Here's why the universe says no, and what to do with the idea instead.
 
 ```bash
 # bitflippr emits every single-bit-flip neighbour of a string.
@@ -17,7 +17,7 @@ go install github.com/cybercdh/bitflippr@latest
 echo really-popular-bucket-123456789 | bitflippr | grep /
 ```
 
-Use it: https://github.com/cybercdh/bitflippr
+It lives at https://github.com/cybercdh/bitflippr
 
 Priya Parity could not sleep. This was not unusual. What was unusual was the reason, which was a hyphen.
 
@@ -56,7 +56,7 @@ Look at the two rows. Count the differences. There is exactly one, the bit worth
 
 Most of the time this would be a shrug. A slash where a hyphen should be is usually just a typo the size of an atom. But Priya did cloud for a living, and in her world the forward slash is not punctuation. It is architecture.
 
-Because in S3, when you address a bucket the old path-style way, the URL looks like this:
+Because in S3, when you address a bucket the old path-style way, the URL looks like this.
 
 ```
 https://s3.amazonaws.com/really-popular-bucket-123456789/some/object.json
@@ -67,7 +67,7 @@ The first slash after the host is the border between the bucket's name and the o
 
 "Gerald," she whispered, "what happens if the sky moves the wall?"
 
-Watch what a single flip does to that URL:
+Watch what a single flip does to that URL.
 
 ```
 before:  s3.amazonaws.com/really-popular-bucket-123456789/some/object.json
@@ -76,7 +76,7 @@ after:   s3.amazonaws.com/really-popular-bucket/123456789/some/object.json
 
 S3 does not see a mistake. S3 sees a perfectly valid request for a different bucket. The name is now `really-popular-bucket`, and the key is `123456789/some/object.json`. The request has quietly changed address. And if you happen to own a bucket called `really-popular-bucket`, that misdirected request, meant for something enormous and popular, lands in your lap instead.
 
-This is where `bitflippr` came from. Feed it a string and it walks every bit, flips each one, and prints every neighbour that is still legal printable ASCII. It does not even need convincing. Its own front-page example, the word `foo`, quietly produces `f/o` and `fo/`, letters spontaneously becoming slashes:
+This is where `bitflippr` came from. Feed it a string and it walks every bit, flips each one, and prints every neighbour that is still legal printable ASCII. It does not even need convincing. Its own front-page example, the word `foo`, quietly produces `f/o` and `fo/`, letters spontaneously becoming slashes.
 
 ```
 $ bitflippr foo
@@ -85,7 +85,7 @@ fno  fmo  fko  fgo  fOo  f/o
 fon  fom  fok  fog  foO  fo/
 ```
 
-If a plain `o` will turn into a slash under one flip, a hyphen, which sits even closer, does it gladly. So point it at a bucket name and sieve the output for the ones that grew a wall:
+If a plain `o` will turn into a slash under one flip, a hyphen, which sits even closer, does it gladly. So point it at a bucket name and sieve the output for the ones that grew a wall.
 
 ```
 $ echo really-popular-bucket-123456789 | bitflippr | grep /
@@ -108,7 +108,7 @@ The first wall is TLS. Yes, the sky flips bits, but if a bit flips inside an enc
 
 The second wall is ECC. The memory in a phone, a cheap router, a bargain-bin laptop, is often unprotected, and that is exactly the population that made the sky's mischief measurable in the first place. But the machines that actually talk to S3 at scale, and the machines inside S3 that route your request once it arrives, live in data centres, and data centre memory is ECC. Error-correcting. It is built specifically to catch a single flipped bit and put it back before anyone notices. The one weapon Priya's whole scheme depended on is the exact thing the cloud is engineered to disarm. The house does not just win, it installed the felt on the table.
 
-The third wall is the cruellest, and it is this: you cannot aim a cosmic ray. This is not an exploit. There is no button. You cannot make the particle arrive, cannot choose the machine, cannot choose the bucket, cannot choose the moment. The natural follow-up is whether you could induce a flip yourself, and there is real research here, the Rowhammer family of tricks that hammer memory rows until a neighbour buckles, and Flip Feng Shui, which used it to reach into a co-hosted virtual machine's memory. But none of it puts your hands anywhere near S3's own routing plane, because you do not get to run code there. You are not a tenant of the wall. You are just someone standing in a field, holding a bucket, hoping for weather.
+The third wall is the cruellest. You cannot aim a cosmic ray. This is not an exploit. There is no button. You cannot make the particle arrive, cannot choose the machine, cannot choose the bucket, cannot choose the moment. The natural follow-up is whether you could induce a flip yourself, and there is real research here, the Rowhammer family of tricks that hammer memory rows until a neighbour buckles, and Flip Feng Shui, which used it to reach into a co-hosted virtual machine's memory. But none of it puts your hands anywhere near S3's own routing plane, because you do not get to run code there. You are not a tenant of the wall. You are just someone standing in a field, holding a bucket, hoping for weather.
 
 Priya added it up. A flip that survives TLS, in a machine without ECC, that happens to be constructing a path-style request, to a bucket whose name flips into one you were clever enough to have already registered, at a scale where "astronomically rare" finally meets "astronomically many requests" and coughs up a single hit you might not even be able to attribute. It is not impossible. Nothing is impossible. It is a lottery where the sky buys your ticket, on a night of its choosing, and forgets to tell you the draw date.
 
@@ -118,22 +118,17 @@ Priya added it up. A flip that survives TLS, in a machine without ECC, that happ
 
 Here is the turn, though, because the idea is not worthless. It is just pointed at the wrong prize.
 
-Strip away the cosmic ray and one solid thing remains standing: right now, today, deterministically, the bit-flipped sibling of some important bucket is very likely sitting unregistered. And an unregistered name in front of critical infrastructure is not a lottery ticket, it is a door left open. You do not need a particle from space to walk through a door.
+Strip away the cosmic ray and one solid thing remains standing. Right now, today, deterministically, the bit-flipped sibling of some important bucket is very likely sitting unregistered. And an unregistered name in front of critical infrastructure is not a lottery ticket, it is a door left open. You do not need a particle from space to walk through a door.
 
 This is not a new lesson, it is just a new dialect of an old one. Back in 2011, Artem Dinaburg registered the bit-flipped cousins of popular domains, the DNS version of this exact trick, switched on logging, and over a few months caught tens of thousands of misdirected requests from real machines whose memory really had glitched. And more recently, Aqua's Bucket Monopoly research showed that when AWS services created buckets with predictable names, an attacker could pre-register those names in an unused region and quietly intercept the traffic, which is why AWS now sprinkles random suffixes into them. Same family. Own the name something trusted will one day reach for, and catch what arrives.
 
-So the useful thing `bitflippr` does is not summon rays. It generates the siblings. You bring the corpus of bucket names worth worrying about, you pipe them through `bitflippr`, you grep for the ones that grew a slash, and then you check which of those shorter names nobody has claimed yet. From there the honourable move is the boring one: tell whoever depends on that bucket that its one-bit shadow is unclaimed, so they can register it themselves and close the door. Defensive registration. Unglamorous. Genuinely useful.
+So the useful thing `bitflippr` does is not summon rays. It generates the siblings. You bring the corpus of bucket names worth worrying about, you pipe them through `bitflippr`, you grep for the ones that grew a slash, and then you check which of those shorter names nobody has claimed yet. From there the honourable move is the boring one. You tell whoever depends on that bucket that its one-bit shadow is unclaimed, so they can register it themselves and close the door. Defensive registration. Unglamorous. Genuinely useful.
 
-And here is the line you do not cross, stated plainly because the fun version of this post would gloss over it. Finding a claimable sibling and reporting it is research. Registering it and logging strangers' traffic is harvesting other people's requests, which can carry tokens and identifiers and things that are none of your business, and serving content back from it is a supply-chain attack with a bow on it. Discover, disclose, register defensively, and stop. The interesting part was always the idea, not the interception.
+And here is the line you do not cross, the bit the fun version of this post would happily skip. Finding a claimable sibling and reporting it is research. Registering it and logging strangers' traffic is harvesting other people's requests, which can carry tokens and identifiers and things that are none of your business, and serving content back from it is a supply-chain attack with a bow on it. You discover, you disclose, you register defensively, and you stop. The interesting part was always the idea, not the interception.
 
-**Lessons, muttered while the kettle boils**
+**The part worth keeping**
 
-- A hyphen and a slash are one bit apart. In S3, that bit is the wall between a bucket and a key. Names are load-bearing.
-- Path-style is the vulnerable shape. Virtual-hosted flips break the hostname and fail closed, so a flip there dies instead of redirecting.
-- The sky really does flip bits. TLS and ECC are why your cloud provider mostly gets away with ignoring it, and why you cannot build a heist on it.
-- You cannot aim a cosmic ray, and you cannot Rowhammer S3's routing plane. If a plan needs the weather to cooperate, it is a dream, not an exploit.
-- The deterministic cousin pays the rent. Unclaimed bit-flip siblings of important buckets exist today. Find them, and get them registered by the people who need them.
-- Never log strangers' traffic to prove a point. Discover, disclose, defend. That is the whole job.
+Strip the romance off it and a few things stay true. A hyphen and a slash are one bit apart, and in S3 that bit is the wall between a bucket and a key, which quietly makes bucket names load-bearing. The trick only bites path-style addressing, because a virtual-hosted flip breaks the hostname and fails closed, so it dies rather than redirects. The sky genuinely does flip bits, and TLS and ECC are both the reason your provider gets away with shrugging at that and the reason you cannot build anything on it yourself. You cannot aim a cosmic ray, and you cannot Rowhammer your way onto S3's routing plane, so any plan that needs the weather to play along is a daydream and not an exploit. The thing that actually earns is the boring deterministic cousin, the unclaimed bit-flip sibling sitting in front of something important today, waiting to be found and handed back to whoever should have owned it in the first place.
 
 Priya filed the idea under "beautiful, mostly untrue," which is a folder every good researcher keeps and nobody admits to. She registered nothing. She caught no rays. She did, however, ship a tool that finds the doors people left open, which is a more reliable way to get paid than waiting for a dying star to take an interest in your bounty targets.
 
